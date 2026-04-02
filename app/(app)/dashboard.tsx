@@ -24,6 +24,11 @@ import {
 } from "../../src/lib/api";
 import { useAuthStore } from "../../src/store/auth-store";
 import type { DashboardState } from "../../src/types/state";
+import {
+  formatDurationFromMinutes,
+  formatMinutePhrasesInText,
+  formatSignedDurationFromMinutes,
+} from "../../src/utils/duration";
 
 type DashboardMode =
   | "not_checked_in_on_time"
@@ -117,7 +122,7 @@ export default function DashboardScreen() {
         ]}
       >
         <ActivityIndicator size="large" color="#1868D5" />
-        <Text style={styles.loadingText}>Loading attendance dashboard...</Text>
+        <Text style={styles.loadingText}>Memuat dashboard absensi...</Text>
       </View>
     );
   }
@@ -164,43 +169,47 @@ export default function DashboardScreen() {
   const isLate = dashboardMode === "not_checked_in_late";
   const isCheckedIn = dashboardMode === "checked_in_not_checked_out";
 
-  const gpsCardTitle = isLate ? "GPS VALIDATION" : "GPS STATUS";
+  const gpsCardTitle = isLate ? "VALIDASI GPS" : "STATUS GPS";
   const gpsCardValue = location_readiness.last_known_accuracy_meter !== null
     ? location_readiness.last_known_accuracy_meter <= 30
-      ? "High Accuracy"
+      ? "Akurasi Tinggi"
       : location_readiness.last_known_accuracy_meter <= 80
-        ? "Medium Accuracy"
-        : "Low Accuracy"
-    : "High Accuracy";
+        ? "Akurasi Sedang"
+        : "Akurasi Rendah"
+    : "Akurasi Tinggi";
 
-  const secondCardTitle = isLate ? "NETWORK" : "GEOFENCE";
+  const secondCardTitle = isLate ? "JARINGAN" : "ZONA LOKASI";
   const secondCardValue = isLate
-    ? "Office Secure"
+    ? "Jaringan Kantor Aman"
     : location_readiness.location_status === "invalid"
-      ? "Out of Radius"
-      : "Within Radius";
+      ? "Di Luar Radius"
+      : "Dalam Radius";
 
-  const ctaLabel = isCheckedIn ? "Scan QR to Check Out" : "Scan QR to Check In";
+  const ctaLabel = isCheckedIn
+    ? "Pindai QR untuk Absen Pulang"
+    : "Pindai QR untuk Absen Masuk";
   const ctaStyle = isLate ? styles.ctaLate : styles.ctaPrimary;
   const statusPillText = isCheckedIn
-    ? "CHECKED IN"
+    ? "SUDAH ABSEN"
     : isLate
-      ? "LATE"
-      : "ON TIME";
-  const statusText = isCheckedIn ? "CHECKED IN" : "NOT CHECKED IN";
+      ? "TERLAMBAT"
+      : "TEPAT WAKTU";
+  const statusText = isCheckedIn ? "SUDAH ABSEN" : "BELUM ABSEN";
   const summaryAvgStart = attendance_summary.avg_start?.time ?? "--:--";
   const summaryAvgDeltaMinutes = attendance_summary.avg_start?.delta_from_shift_start_minutes ?? null;
   const summaryWeekHours = attendance_summary.this_week?.total_hours ?? 0;
   const summaryRecentActivity = attendance_summary.recent_activity?.length
     ? attendance_summary.recent_activity.slice(0, 2).map((activity) => ({
         label: activity.label ?? "-",
-        title: activity.title ?? "Activity",
+        title: activity.title ?? "Aktivitas",
         type: (activity.type ?? "clock_in") as "clock_in" | "clock_out",
         at: activity.at,
       }))
     : buildRecentActivityFallback(state.data.recent_attendances);
-  const summaryInsightMessage = attendance_summary.insight?.message
-    ?? "Your summary insight will appear after more attendance data is collected.";
+  const summaryInsightMessage = formatMinutePhrasesInText(
+    attendance_summary.insight?.message
+      ?? "Insight ringkasan akan muncul setelah data absensi Anda mencukupi.",
+  );
   const summaryInsightType = attendance_summary.insight?.type ?? "neutral";
 
   return (
@@ -222,7 +231,7 @@ export default function DashboardScreen() {
                 <View style={styles.avatarCircle}>
                   <Ionicons name="person" size={22} color="#16223A" />
                 </View>
-                <Text style={styles.appTitle}>The Curator</Text>
+                <Text style={styles.appTitle}>FlowHR</Text>
               </View>
               <Pressable hitSlop={8}>
                 <Ionicons name="notifications" size={24} color="#6F7787" />
@@ -230,7 +239,7 @@ export default function DashboardScreen() {
             </>
           ) : (
             <>
-              <Text style={styles.appTitle}>The Curator</Text>
+              <Text style={styles.appTitle}>FlowHR</Text>
               <Pressable
                 onLongPress={() => void handleLogout()}
                 disabled={isLoggingOut}
@@ -258,7 +267,7 @@ export default function DashboardScreen() {
           <View style={styles.overviewBlock}>
             {!isLate ? (
               <>
-                <Text style={styles.overviewLabel}>DAILY OVERVIEW</Text>
+                <Text style={styles.overviewLabel}>RINGKASAN HARI INI</Text>
                 <Text style={styles.greetingTitle}>{getGreeting(now)}</Text>
               </>
             ) : (
@@ -271,11 +280,11 @@ export default function DashboardScreen() {
                   </View>
                 </View>
                 <View style={[styles.statusLocationCol, styles.alignRight]}>
-                  <Text style={styles.overviewLabel}>LOCATION</Text>
+                  <Text style={styles.overviewLabel}>LOKASI</Text>
                   <View style={styles.rowInline}>
                     <Ionicons name="checkmark-circle" size={20} color="#027A30" />
                     <Text style={styles.locationText}>
-                      {(user.office_location_name ?? "MAIN OFFICE").toUpperCase()}
+                      {(user.office_location_name ?? "KANTOR UTAMA").toUpperCase()}
                     </Text>
                   </View>
                 </View>
@@ -286,7 +295,7 @@ export default function DashboardScreen() {
 
         {isCheckedIn ? (
           <View style={styles.mainCard}>
-            <Text style={styles.sessionLabel}>CURRENT SESSION</Text>
+            <Text style={styles.sessionLabel}>SESI BERJALAN</Text>
             <View style={styles.sessionRow}>
               <Text style={styles.sessionTimer}>{sessionDuration}</Text>
               <View style={styles.clockCircle}>
@@ -296,7 +305,7 @@ export default function DashboardScreen() {
             <View style={styles.sessionStartRow}>
               <Ionicons name="log-in-outline" size={22} color="#027A30" />
               <Text style={styles.sessionStartText}>
-                Shift Started at{" "}
+                Jam kerja dimulai pada{" "}
                 <Text style={styles.sessionStartBold}>
                   {formatClock(today_status.check_in_at)}
                 </Text>
@@ -318,26 +327,28 @@ export default function DashboardScreen() {
                 </Text>
               </View>
             </View>
-            <Text style={styles.currentTimeLabel}>Current Time</Text>
+            <Text style={styles.currentTimeLabel}>Waktu Saat Ini</Text>
             <Text style={styles.currentTimeValue}>{formatClock(now)}</Text>
 
             {isLate ? (
               <View style={styles.lateBanner}>
                 <Ionicons name="warning" size={20} color="#C01616" />
-                <Text style={styles.lateBannerText}>You are {lateMinutes} minutes late</Text>
+                <Text style={styles.lateBannerText}>
+                  Anda terlambat {formatDurationFromMinutes(lateMinutes)}
+                </Text>
               </View>
             ) : null}
 
             <View style={styles.divider} />
             <View style={styles.shiftRow}>
               <View>
-                <Text style={styles.shiftLabel}>SHIFT START</Text>
+                <Text style={styles.shiftLabel}>MULAI SHIFT</Text>
                 <Text style={styles.shiftValue}>{formatClock(shiftStart)}</Text>
               </View>
               <View style={styles.shiftSeparator} />
               <View>
                 <Text style={styles.shiftLabel}>
-                  {isLate ? "THRESHOLD" : "DEADLINE"}
+                  {isLate ? "BATAS" : "BATAS WAKTU"}
                 </Text>
                 <Text style={styles.shiftValue}>{formatClock(threshold)}</Text>
               </View>
@@ -388,7 +399,7 @@ export default function DashboardScreen() {
                   />
                 }
                 title={gpsCardTitle}
-                value={isLate ? "Within Perimeter" : gpsCardValue}
+                value={isLate ? "Dalam Perimeter" : gpsCardValue}
                 accent="green"
               />
               <StatusInfoCard
@@ -409,19 +420,19 @@ export default function DashboardScreen() {
 
         {isCheckedIn ? (
           <View style={styles.timelineSection}>
-            <Text style={styles.timelineTitle}>TODAY&apos;S TIMELINE</Text>
+            <Text style={styles.timelineTitle}>TIMELINE HARI INI</Text>
             <View style={styles.timelineCardsRow}>
               <View style={styles.timelineCard}>
-                <Text style={styles.timelineLabel}>PUNCH IN</Text>
+                <Text style={styles.timelineLabel}>CHECK-IN</Text>
                 <Text style={styles.timelineTime}>{formatClock(today_status.check_in_at)}</Text>
                 <View style={styles.timelineBadge}>
                   <Text style={styles.timelineBadgeText}>
-                    {today_status.is_late ? "LATE" : "ON TIME"}
+                    {today_status.is_late ? "TERLAMBAT" : "TEPAT WAKTU"}
                   </Text>
                 </View>
               </View>
               <View style={styles.timelineCard}>
-                <Text style={styles.timelineLabel}>EXPECTED OUT</Text>
+                <Text style={styles.timelineLabel}>PERKIRAAN PULANG</Text>
                 <Text style={styles.timelineTimeMuted}>
                   {formatClock(parsePolicyTime(policy.work_end_time, now))}
                 </Text>
@@ -432,11 +443,11 @@ export default function DashboardScreen() {
         ) : null}
 
         <View style={styles.attendanceSummaryCard}>
-          <Text style={styles.attendanceSummaryTitle}>Attendance Summary</Text>
+          <Text style={styles.attendanceSummaryTitle}>Ringkasan Absensi</Text>
 
           <View style={styles.attendanceSummaryStatRow}>
             <View style={styles.attendanceSummaryStatBox}>
-              <Text style={styles.attendanceSummaryStatLabel}>AVG. START</Text>
+              <Text style={styles.attendanceSummaryStatLabel}>RATA-RATA MASUK</Text>
               <View style={styles.attendanceSummaryStatValueRow}>
                 <Text style={styles.attendanceSummaryStatValue}>{summaryAvgStart}</Text>
                 {summaryAvgDeltaMinutes !== null ? (
@@ -455,19 +466,19 @@ export default function DashboardScreen() {
             </View>
 
             <View style={styles.attendanceSummaryStatBox}>
-              <Text style={styles.attendanceSummaryStatLabel}>THIS WEEK</Text>
+              <Text style={styles.attendanceSummaryStatLabel}>MINGGU INI</Text>
               <View style={styles.attendanceSummaryStatValueRow}>
                 <Text style={styles.attendanceSummaryStatValue}>
                   {formatWeekHours(summaryWeekHours)}
                 </Text>
-                <Text style={styles.attendanceSummaryHoursSuffix}>HRS</Text>
+                <Text style={styles.attendanceSummaryHoursSuffix}>JAM</Text>
               </View>
             </View>
           </View>
 
           <View style={styles.attendanceSummaryRecentHeader}>
-            <Text style={styles.attendanceSummaryRecentTitle}>RECENT ACTIVITY</Text>
-            <Text style={styles.attendanceSummaryRecentLink}>View History</Text>
+            <Text style={styles.attendanceSummaryRecentTitle}>AKTIVITAS TERBARU</Text>
+            <Text style={styles.attendanceSummaryRecentLink}>Lihat History</Text>
           </View>
 
           {summaryRecentActivity.length > 0 ? (
@@ -520,7 +531,7 @@ export default function DashboardScreen() {
           </View>
           <View style={styles.policyTextWrap}>
             <Text style={styles.policyTitle}>
-              {isCheckedIn ? "Attendance Policy Active" : "Attendance Policy"}
+              {isCheckedIn ? "Kebijakan Absensi Aktif" : "Kebijakan Absensi"}
             </Text>
             <Text style={styles.policyDescription}>
               {buildPolicyMessage({
@@ -538,7 +549,7 @@ export default function DashboardScreen() {
       <View style={[styles.bottomNav, { height: navHeight, paddingBottom: navBottomPadding }]}>
         <BottomNavItem
           icon={<Ionicons name="home" size={28} color="#1D64D7" />}
-          label="HOME"
+          label="DASHBOARD"
           active
         />
         <BottomNavItem
@@ -548,11 +559,11 @@ export default function DashboardScreen() {
         />
         <BottomNavItem
           icon={<Ionicons name="calendar-outline" size={26} color="#7A828F" />}
-          label="LEAVE"
+          label="CUTI"
         />
         <BottomNavItem
           icon={<FontAwesome6 name="user" size={22} color="#7A828F" />}
-          label="PROFILE"
+          label="PROFIL"
         />
       </View>
     </View>
@@ -637,7 +648,7 @@ function buildRecentActivityFallback(
     if (attendance.check_in_at) {
       items.push({
         label: dayLabel,
-        title: "Clock In",
+        title: "Absen Masuk",
         type: "clock_in",
         at: attendance.check_in_at,
       });
@@ -646,7 +657,7 @@ function buildRecentActivityFallback(
     if (attendance.check_out_at) {
       items.push({
         label: dayLabel,
-        title: "Clock Out",
+        title: "Absen Pulang",
         type: "clock_out",
         at: attendance.check_out_at,
       });
@@ -681,11 +692,11 @@ function resolveRelativeDayLabel(workDate: string | null): string {
   );
 
   if (candidate.getTime() === today.getTime()) {
-    return "Today";
+    return "Hari Ini";
   }
 
   if (candidate.getTime() === yesterday.getTime()) {
-    return "Yesterday";
+    return "Kemarin";
   }
 
   return targetDate.toLocaleDateString("en-US", {
@@ -695,8 +706,7 @@ function resolveRelativeDayLabel(workDate: string | null): string {
 }
 
 function formatDeltaMinutes(value: number): string {
-  const sign = value > 0 ? "+" : "";
-  return `(${sign}${value}m)`;
+  return `(${formatSignedDurationFromMinutes(value)})`;
 }
 
 function formatWeekHours(value: number): string {
@@ -792,12 +802,12 @@ function calculateLateMinutes(shiftStart: Date | null, now: Date): number {
 function getGreeting(now: Date): string {
   const hour = now.getHours();
   if (hour < 12) {
-    return "Good Morning.";
+    return "Selamat Pagi.";
   }
   if (hour < 18) {
-    return "Good Afternoon.";
+    return "Selamat Siang.";
   }
-  return "Good Evening.";
+  return "Selamat Malam.";
 }
 
 function buildPolicyMessage({
@@ -814,20 +824,22 @@ function buildPolicyMessage({
   lateToleranceMinutes: number;
 }): string {
   if (isLate) {
-    return `Checking in after ${formatClock(
+    return `Absen masuk setelah ${formatClock(
       threshold,
-    )} requires a reason for lateness to be submitted during the check-in process.`;
+    )} mengharuskan alasan keterlambatan saat proses absen masuk.`;
   }
 
   if (isCheckedIn) {
-    return `Grace period is ${lateToleranceMinutes} minutes from shift start ${formatClock(
-      shiftStart,
-    )}. You are currently within your assigned attendance zone.`;
+    return `Masa toleransi adalah ${formatDurationFromMinutes(
+      lateToleranceMinutes,
+    )} dari jam mulai shift ${formatClock(shiftStart)}. Anda saat ini berada di zona absensi yang ditentukan.`;
   }
 
-  return `A grace period of ${lateToleranceMinutes} minutes is allowed. Checking in after ${formatClock(
+  return `Masa toleransi ${formatDurationFromMinutes(
+    lateToleranceMinutes,
+  )} diterapkan. Absen masuk setelah ${formatClock(
     threshold,
-  )} will be marked as Late Attendance.`;
+  )} akan ditandai sebagai absensi terlambat.`;
 }
 
 const styles = StyleSheet.create({
@@ -1485,3 +1497,5 @@ const styles = StyleSheet.create({
     color: "#1D64D7",
   },
 });
+
+

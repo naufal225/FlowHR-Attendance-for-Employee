@@ -32,6 +32,7 @@ import type {
   MobileAttendanceHistoryMeta,
   MobileAttendanceRecordStatus,
 } from "../../src/types/api";
+import { formatDurationFromMinutes } from "../../src/utils/duration";
 
 type HistoryFilterKey = "all" | "this_month" | MobileAttendanceRecordStatus;
 
@@ -52,11 +53,11 @@ type AttendanceInsight = {
 };
 
 const FILTER_OPTIONS: Array<{ key: HistoryFilterKey; label: string }> = [
-  { key: "all", label: "All Records" },
-  { key: "this_month", label: "This Month" },
-  { key: "complete", label: "Complete" },
-  { key: "ongoing", label: "Ongoing" },
-  { key: "incomplete", label: "Incomplete" },
+  { key: "all", label: "Semua Data" },
+  { key: "this_month", label: "Bulan Ini" },
+  { key: "complete", label: "Selesai" },
+  { key: "ongoing", label: "Berjalan" },
+  { key: "incomplete", label: "Belum Lengkap" },
 ];
 
 const INITIAL_STATE: HistoryState = {
@@ -154,6 +155,10 @@ export default function HistoryScreen() {
   };
 
   const handleFilterChange = (filter: HistoryFilterKey) => {
+    if (filter === activeFilter && page === 1) {
+      return;
+    }
+
     setActiveFilter(filter);
     setPage(1);
   };
@@ -163,8 +168,8 @@ export default function HistoryScreen() {
     setPage(1);
   };
 
-  const canGoPrev = (state.meta?.current_page ?? 1) > 1;
-  const canGoNext = state.meta
+  const canGoSebelumnya = (state.meta?.current_page ?? 1) > 1;
+  const canGoSelanjutnya = state.meta
     ? state.meta.current_page < state.meta.last_page
     : false;
 
@@ -185,7 +190,7 @@ export default function HistoryScreen() {
             <View style={styles.avatarCircle}>
               <Ionicons name="person" size={18} color="#132440" />
             </View>
-            <Text style={styles.headerTitle}>Attendance History</Text>
+            <Text style={styles.headerTitle}>History Absensi</Text>
           </View>
           <Pressable style={styles.iconButton} hitSlop={8}>
             <Ionicons name="options-outline" size={22} color="#5D6B82" />
@@ -221,7 +226,7 @@ export default function HistoryScreen() {
 
         {state.errorMessage && !state.items.length ? (
           <View style={styles.errorCard}>
-            <Text style={styles.errorTitle}>Gagal memuat attendance history</Text>
+            <Text style={styles.errorTitle}>Gagal memuat history absensi</Text>
             <Text style={styles.errorMessage}>{state.errorMessage}</Text>
             <Pressable
               style={styles.retryButton}
@@ -251,27 +256,28 @@ export default function HistoryScreen() {
             {state.meta && state.meta.last_page > 1 ? (
               <View style={styles.paginationRow}>
                 <Pressable
-                  style={[styles.pageButton, !canGoPrev && styles.pageButtonDisabled]}
-                  disabled={!canGoPrev}
+                  style={[styles.pageButton, !canGoSebelumnya && styles.pageButtonDisabled]}
+                  disabled={!canGoSebelumnya}
                   onPress={() => setPage((current) => Math.max(1, current - 1))}
                 >
                   <Feather name="chevron-left" size={16} color="#273142" />
-                  <Text style={styles.pageButtonText}>Prev</Text>
+                  <Text style={styles.pageButtonText}>Sebelumnya</Text>
                 </Pressable>
 
                 <Text style={styles.paginationText}>
-                  PAGE <Text style={styles.paginationCurrent}>{state.meta.current_page}</Text> OF{" "}
+                  HALAMAN{" "}
+                  <Text style={styles.paginationCurrent}>{state.meta.current_page}</Text> DARI{" "}
                   {state.meta.last_page}
                 </Text>
 
                 <Pressable
-                  style={[styles.pageButton, !canGoNext && styles.pageButtonDisabled]}
-                  disabled={!canGoNext}
+                  style={[styles.pageButton, !canGoSelanjutnya && styles.pageButtonDisabled]}
+                  disabled={!canGoSelanjutnya}
                   onPress={() =>
                     setPage((current) => Math.min(state.meta?.last_page ?? current, current + 1))
                   }
                 >
-                  <Text style={styles.pageButtonText}>Next</Text>
+                  <Text style={styles.pageButtonText}>Selanjutnya</Text>
                   <Feather name="chevron-right" size={16} color="#273142" />
                 </Pressable>
               </View>
@@ -299,11 +305,11 @@ export default function HistoryScreen() {
         />
         <BottomNavItem
           icon={<Ionicons name="calendar-outline" size={22} color="#7A828F" />}
-          label="SCHEDULE"
+          label="JADWAL"
         />
         <BottomNavItem
           icon={<FontAwesome6 name="user" size={18} color="#7A828F" />}
-          label="PROFILE"
+          label="PROFIL"
         />
       </View>
     </View>
@@ -314,7 +320,7 @@ function HistoryCard({ item }: { item: MobileAttendanceHistoryItem }) {
   const statusBadge = resolveRecordStatusBadge(item.record_status);
   const attendanceInsight = resolveAttendanceInsight(item);
   const correctionLabel = item.correction.latest_status
-    ? capitalizeWord(item.correction.latest_status)
+    ? translateCorrectionStatus(item.correction.latest_status)
     : null;
 
   return (
@@ -324,19 +330,19 @@ function HistoryCard({ item }: { item: MobileAttendanceHistoryItem }) {
 
         <View style={styles.cardBadgeWrap}>
           <StatusBadge label={statusBadge.label} tone={statusBadge.tone} />
-          {item.is_suspicious ? <StatusBadge label="Suspicious" tone="red" /> : null}
+          {item.is_suspicious ? <StatusBadge label="Mencurigakan" tone="red" /> : null}
         </View>
       </View>
 
-      <Text style={styles.officeName}>{item.office_location.name ?? "Office"}</Text>
+      <Text style={styles.officeName}>{item.office_location.name ?? "Kantor"}</Text>
 
       <View style={styles.clockRow}>
         <View style={styles.clockCol}>
-          <Text style={styles.clockLabel}>CLOCK IN</Text>
+          <Text style={styles.clockLabel}>JAM MASUK</Text>
           <Text style={styles.clockValue}>{formatClock(item.check_in_at)}</Text>
         </View>
         <View style={styles.clockCol}>
-          <Text style={styles.clockLabel}>CLOCK OUT</Text>
+          <Text style={styles.clockLabel}>JAM PULANG</Text>
           <Text style={styles.clockValue}>{formatClock(item.check_out_at)}</Text>
         </View>
       </View>
@@ -363,7 +369,7 @@ function HistoryCard({ item }: { item: MobileAttendanceHistoryItem }) {
 
         {item.correction.has_correction ? (
           <Text style={styles.correctionText}>
-            CORRECTION:{" "}
+            PERBAIKAN:{" "}
             <Text
               style={[
                 styles.correctionStatus,
@@ -378,7 +384,7 @@ function HistoryCard({ item }: { item: MobileAttendanceHistoryItem }) {
             </Text>
           </Text>
         ) : (
-          <Text style={styles.correctionTextMuted}>CORRECTION: -</Text>
+          <Text style={styles.correctionTextMuted}>PERBAIKAN: -</Text>
         )}
       </View>
     </View>
@@ -489,17 +495,17 @@ function EmptyHistoryState({
       <View style={styles.emptyIllustration}>
         <MaterialCommunityIcons name="folder-search-outline" size={88} color="#7EA6D6" />
       </View>
-      <Text style={styles.emptyTitle}>No attendance records found.</Text>
+      <Text style={styles.emptyTitle}>Data absensi tidak ditemukan.</Text>
       <Text style={styles.emptyDescription}>
         {showReset
-          ? `No data available for filter "${filterLabel}". Try a different filter.`
-          : "Attendance records will appear here once you start using mobile attendance."}
+          ? `Tidak ada data untuk filter "${filterLabel}". Coba filter lain.`
+          : "Data absensi akan tampil di sini setelah Anda mulai menggunakan absensi mobile."}
       </Text>
 
       {showReset ? (
         <Pressable style={styles.emptyButton} onPress={onReset}>
           <Ionicons name="refresh" size={19} color="#FFFFFF" />
-          <Text style={styles.emptyButtonText}>Reset Filters</Text>
+          <Text style={styles.emptyButtonText}>Atur Ulang Filter</Text>
         </Pressable>
       ) : null}
     </View>
@@ -535,20 +541,20 @@ function resolveRecordStatusBadge(
   status: MobileAttendanceRecordStatus | null,
 ): { label: string; tone: BadgeTone } {
   if (status === "complete") {
-    return { label: "Complete", tone: "green" };
+    return { label: "Selesai", tone: "green" };
   }
 
   if (status === "ongoing") {
-    return { label: "Ongoing", tone: "blue" };
+    return { label: "Berjalan", tone: "blue" };
   }
 
-  return { label: "Incomplete", tone: "gray" };
+  return { label: "Belum Lengkap", tone: "gray" };
 }
 
 function resolveAttendanceInsight(item: MobileAttendanceHistoryItem): AttendanceInsight {
   if ((item.overtime_minutes ?? 0) > 0) {
     return {
-      text: `${item.overtime_minutes} min Overtime`,
+      text: `${formatDurationFromMinutes(item.overtime_minutes ?? 0)} Lembur`,
       tone: "green",
       icon: "time-outline",
     };
@@ -556,7 +562,7 @@ function resolveAttendanceInsight(item: MobileAttendanceHistoryItem): Attendance
 
   if ((item.late_minutes ?? 0) > 0) {
     return {
-      text: `Late ${item.late_minutes} min`,
+      text: `Terlambat ${formatDurationFromMinutes(item.late_minutes ?? 0)}`,
       tone: "blue",
       icon: "warning-outline",
     };
@@ -564,7 +570,7 @@ function resolveAttendanceInsight(item: MobileAttendanceHistoryItem): Attendance
 
   if ((item.early_leave_minutes ?? 0) > 0) {
     return {
-      text: `Early Leave ${item.early_leave_minutes} min`,
+      text: `Pulang Lebih Awal ${formatDurationFromMinutes(item.early_leave_minutes ?? 0)}`,
       tone: "red",
       icon: "log-out-outline",
     };
@@ -572,14 +578,14 @@ function resolveAttendanceInsight(item: MobileAttendanceHistoryItem): Attendance
 
   if (!item.check_in_at && !item.check_out_at) {
     return {
-      text: "No data",
+      text: "Tidak ada data",
       tone: "neutral",
       icon: "remove-circle-outline",
     };
   }
 
   return {
-    text: "On schedule",
+    text: "Sesuai jadwal",
     tone: "neutral",
     icon: "checkmark-circle-outline",
   };
@@ -603,7 +609,7 @@ function resolveInsightColor(tone: AttendanceInsight["tone"]): string {
 
 function resolveFilterLabel(filter: HistoryFilterKey): string {
   const option = FILTER_OPTIONS.find((item) => item.key === filter);
-  return option?.label ?? "All Records";
+  return option?.label ?? "Semua Data";
 }
 
 function buildHistoryQuery(filter: HistoryFilterKey): {
@@ -670,12 +676,20 @@ function toYmd(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
-function capitalizeWord(value: string): string {
-  if (!value) {
-    return "";
+function translateCorrectionStatus(value: string): string {
+  if (value === "pending") {
+    return "Menunggu";
   }
 
-  return value.charAt(0).toUpperCase() + value.slice(1);
+  if (value === "approved") {
+    return "Disetujui";
+  }
+
+  if (value === "rejected") {
+    return "Ditolak";
+  }
+
+  return value;
 }
 
 const styles = StyleSheet.create({
@@ -709,10 +723,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   headerTitle: {
-    fontSize: 31,
+    fontSize: 18,
     color: "#195FD1",
     fontWeight: "800",
-    letterSpacing: -0.4,
+    letterSpacing: -0.2,
   },
   iconButton: {
     width: 38,
@@ -1061,7 +1075,7 @@ const styles = StyleSheet.create({
     opacity: 0.35,
   },
   pageButtonText: {
-    fontSize: 18,
+    fontSize: 14,
     color: "#253140",
     fontWeight: "500",
   },
@@ -1076,48 +1090,47 @@ const styles = StyleSheet.create({
   },
   bottomNav: {
     position: "absolute",
+    bottom: 0,
     left: 0,
     right: 0,
-    bottom: 0,
-    backgroundColor: "#F2F3F6",
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    borderTopWidth: 1,
-    borderColor: "#E5E8EC",
+    height: 86,
+    backgroundColor: "#F5F6F8",
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
     flexDirection: "row",
-    alignItems: "flex-end",
+    alignItems: "center",
     justifyContent: "space-around",
-    paddingHorizontal: 12,
+    paddingHorizontal: 8,
+    paddingBottom: 8,
   },
   navItemWrapper: {
-    flex: 1,
     alignItems: "center",
+    justifyContent: "center",
   },
   navItem: {
-    minWidth: 72,
-    minHeight: 66,
-    borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
     gap: 4,
-    marginBottom: 4,
-    paddingHorizontal: 10,
+    borderRadius: 20,
+    width: 82,
+    height: 64,
   },
   navItemActive: {
-    backgroundColor: "#1D64D7",
+    backgroundColor: "#DCE8FB",
     shadowColor: "#1D64D7",
-    shadowOpacity: 0.22,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
     elevation: 3,
   },
   navLabel: {
-    fontSize: 10,
-    letterSpacing: 0.8,
-    color: "#7A828F",
+    fontSize: 12,
+    color: "#6C7482",
     fontWeight: "700",
+    letterSpacing: 0.8,
   },
   navLabelActive: {
-    color: "#FFFFFF",
+    color: "#1D64D7",
   },
 });
+

@@ -1,4 +1,4 @@
-import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
+﻿import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Redirect, router } from "expo-router";
 import { useMemo, useState } from "react";
 import {
@@ -74,24 +74,24 @@ export default function LoginScreen() {
             <MaterialCommunityIcons name="cube-outline" size={22} color="#1869D5" />
             <Text style={styles.brandName}>FlowHR</Text>
           </View>
-          <Text style={styles.brandSubtitle}>Welcome back to your workspace</Text>
+          <Text style={styles.brandSubtitle}>Selamat datang kembali di ruang kerja Anda</Text>
         </View>
 
         <View style={styles.formSection}>
-          <Text style={styles.heading}>Sign In</Text>
+          <Text style={styles.heading}>Masuk</Text>
           <Text style={styles.description}>
-            Enter your credentials to access your dashboard.
+            Masukkan kredensial Anda untuk mengakses dashboard.
           </Text>
 
           <View style={styles.fieldGroup}>
-            <Text style={styles.label}>EMAIL OR USERNAME</Text>
+            <Text style={styles.label}>EMAIL ATAU USERNAME</Text>
             <View style={styles.inputContainer}>
               <Feather name="at-sign" size={20} color="#9198A2" />
               <TextInput
                 autoCapitalize="none"
                 autoComplete="email"
                 keyboardType="email-address"
-                placeholder="john.doe@company.com"
+                placeholder="nama@perusahaan.com"
                 placeholderTextColor="#A5ABB3"
                 style={styles.input}
                 value={email}
@@ -102,9 +102,9 @@ export default function LoginScreen() {
 
           <View style={styles.fieldGroup}>
             <View style={styles.passwordHeader}>
-              <Text style={styles.label}>PASSWORD</Text>
+              <Text style={styles.label}>KATA SANDI</Text>
               <Pressable>
-                <Text style={styles.forgotPassword}>Forgot Password?</Text>
+                <Text style={styles.forgotPassword}>Lupa Kata Sandi?</Text>
               </Pressable>
             </View>
             <View style={styles.inputContainer}>
@@ -112,7 +112,7 @@ export default function LoginScreen() {
               <TextInput
                 autoCapitalize="none"
                 autoComplete="password"
-                placeholder="••••••••••••"
+                placeholder="************"
                 placeholderTextColor="#A5ABB3"
                 secureTextEntry={isPasswordHidden}
                 style={styles.input}
@@ -140,7 +140,7 @@ export default function LoginScreen() {
               thumbColor={keepSignedIn ? "#1869D5" : "#F8FAFC"}
               ios_backgroundColor="#D4D7DB"
             />
-            <Text style={styles.keepSignedText}>Keep me signed in</Text>
+            <Text style={styles.keepSignedText}>Biarkan saya tetap masuk</Text>
           </View>
 
           {errorMessage ? <Text style={styles.error}>{errorMessage}</Text> : null}
@@ -157,7 +157,7 @@ export default function LoginScreen() {
               <ActivityIndicator color="#FFFFFF" />
             ) : (
               <View style={styles.buttonContent}>
-                <Text style={styles.buttonText}>Sign In</Text>
+                <Text style={styles.buttonText}>Masuk</Text>
                 <Feather name="arrow-right" size={20} color="#FFFFFF" />
               </View>
             )}
@@ -165,9 +165,9 @@ export default function LoginScreen() {
         </View>
 
         <View style={styles.footerSection}>
-          <Text style={styles.footerText}>Don&apos;t have an account?</Text>
+          <Text style={styles.footerText}>Belum punya akun?</Text>
           <Pressable>
-            <Text style={styles.footerLink}>Contact HR Administrator</Text>
+            <Text style={styles.footerLink}>Hubungi Administrator HR</Text>
           </Pressable>
         </View>
 
@@ -177,7 +177,7 @@ export default function LoginScreen() {
           <View style={styles.dot} />
         </View>
 
-        <Text style={styles.versionText}>FLOWHR VERSION 2.4.0 • ENTERPRISE READY</Text>
+        <Text style={styles.versionText}>FLOWHR VERSI 2.4.0 • SIAP PERUSAHAAN</Text>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -351,3 +351,5 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 });
+
+
