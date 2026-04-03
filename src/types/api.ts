@@ -31,6 +31,30 @@ export type MobileLoginResponse = ApiSuccessResponse<MobileLoginPayload>;
 
 export type MobileMeResponse = ApiSuccessResponse<MobileUser>;
 
+export type MobileLocationStatus = "valid" | "invalid" | "suspicious";
+
+export type MobileLocationAccuracyLevel = "good" | "fair" | "poor";
+
+export type MobileLocationReadiness = {
+  office_radius_meter: number | null;
+  min_location_accuracy_meter: number | null;
+  gps_required: boolean;
+  last_known_distance_meter: number | null;
+  last_known_accuracy_meter: number | null;
+  location_status: MobileLocationStatus | null;
+  location_reason: string | null;
+  has_location_fix?: boolean;
+  accuracy_meter?: number | null;
+  distance_meter?: number | null;
+  status?: MobileLocationStatus | null;
+  status_label?: string | null;
+  accuracy_level?: MobileLocationAccuracyLevel | null;
+  accuracy_label?: string | null;
+  reason?: string | null;
+  is_valid?: boolean | null;
+  is_suspicious?: boolean | null;
+};
+
 export type MobileDashboardPayload = {
   user: {
     id: number;
@@ -95,15 +119,7 @@ export type MobileDashboardPayload = {
     late_tolerance_minutes: number | null;
     timezone: string | null;
   };
-  location_readiness: {
-    office_radius_meter: number | null;
-    min_location_accuracy_meter: number | null;
-    gps_required: boolean;
-    last_known_distance_meter: number | null;
-    last_known_accuracy_meter: number | null;
-    location_status: string | null;
-    location_reason: string | null;
-  };
+  location_readiness: MobileLocationReadiness;
   day_context: {
     is_off_day: boolean;
     is_on_leave: boolean;

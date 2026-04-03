@@ -29,11 +29,13 @@ import {
   formatMinutePhrasesInText,
   formatSignedDurationFromMinutes,
 } from "../../src/utils/duration";
+import { buildLocationReadinessViewModel } from "../../src/utils/location-readiness";
 
 type DashboardMode =
   | "not_checked_in_on_time"
   | "not_checked_in_late"
-  | "checked_in_not_checked_out";
+  | "checked_in_not_checked_out"
+  | "checked_in_checked_out";
 
 const initialState: DashboardState = {
   data: null,
@@ -103,10 +105,12 @@ export default function DashboardScreen() {
   };
 
   const checkInAt = state.data?.today_status.check_in_at ?? null;
+  const checkOutAt = state.data?.today_status.check_out_at ?? null;
   const shiftStart = parsePolicyTime(state.data?.policy.work_start_time ?? null, now);
   const lateToleranceMinutes = state.data?.policy.late_tolerance_minutes ?? 0;
   const threshold = shiftStart ? addMinutes(shiftStart, lateToleranceMinutes) : null;
-  const sessionDuration = formatSessionDuration(checkInAt, now);
+  const isSessionRunning = Boolean(checkInAt) && !Boolean(checkOutAt);
+  const sessionDuration = formatSessionDuration(checkInAt, now, isSessionRunning);
   const lateMinutes = calculateLateMinutes(shiftStart, now);
   const navBottomPadding = Math.max(insets.bottom, 8);
   const navHeight = 78 + navBottomPadding;
@@ -161,29 +165,26 @@ export default function DashboardScreen() {
   const dashboardMode: DashboardMode = hasCheckIn && !hasCheckOut
     ? "checked_in_not_checked_out"
     : hasCheckIn && hasCheckOut
-      ? "checked_in_not_checked_out"
+      ? "checked_in_checked_out"
       : threshold && now.getTime() > threshold.getTime()
         ? "not_checked_in_late"
         : "not_checked_in_on_time";
 
   const isLate = dashboardMode === "not_checked_in_late";
   const isCheckedIn = dashboardMode === "checked_in_not_checked_out";
+  const isCheckedOut = dashboardMode === "checked_in_checked_out";
+  const hasCheckedInToday = isCheckedIn || isCheckedOut;
+  const locationReadinessView = buildLocationReadinessViewModel(location_readiness);
 
   const gpsCardTitle = isLate ? "VALIDASI GPS" : "STATUS GPS";
-  const gpsCardValue = location_readiness.last_known_accuracy_meter !== null
-    ? location_readiness.last_known_accuracy_meter <= 30
-      ? "Akurasi Tinggi"
-      : location_readiness.last_known_accuracy_meter <= 80
-        ? "Akurasi Sedang"
-        : "Akurasi Rendah"
-    : "Akurasi Tinggi";
+  const gpsCardValue = locationReadinessView.gpsValue;
+  const gpsCardAccent = locationReadinessView.gpsAccent;
+  const gpsIconColor = gpsCardAccent === "green" ? "#027A30" : "#6B7280";
 
-  const secondCardTitle = isLate ? "JARINGAN" : "ZONA LOKASI";
-  const secondCardValue = isLate
-    ? "Jaringan Kantor Aman"
-    : location_readiness.location_status === "invalid"
-      ? "Di Luar Radius"
-      : "Dalam Radius";
+  const secondCardTitle = "ZONA LOKASI";
+  const secondCardValue = locationReadinessView.zoneValue;
+  const secondCardAccent = locationReadinessView.zoneAccent;
+  const secondIconColor = secondCardAccent === "green" ? "#027A30" : "#6B7280";
 
   const ctaLabel = isCheckedIn
     ? "Pindai QR untuk Absen Pulang"
@@ -191,10 +192,16 @@ export default function DashboardScreen() {
   const ctaStyle = isLate ? styles.ctaLate : styles.ctaPrimary;
   const statusPillText = isCheckedIn
     ? "SUDAH ABSEN"
+    : isCheckedOut
+      ? "SUDAH CHECK-OUT"
     : isLate
       ? "TERLAMBAT"
       : "TEPAT WAKTU";
-  const statusText = isCheckedIn ? "SUDAH ABSEN" : "BELUM ABSEN";
+  const statusText = isCheckedIn
+    ? "SUDAH ABSEN MASUK"
+    : isCheckedOut
+      ? "SUDAH CHECK-OUT"
+      : "BELUM ABSEN";
   const summaryAvgStart = attendance_summary.avg_start?.time ?? "--:--";
   const summaryAvgDeltaMinutes = attendance_summary.avg_start?.delta_from_shift_start_minutes ?? null;
   const summaryWeekHours = attendance_summary.this_week?.total_hours ?? 0;
@@ -225,7 +232,7 @@ export default function DashboardScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.topHeader}>
-          {isCheckedIn ? (
+          {hasCheckedInToday ? (
             <>
               <View style={styles.profileHeaderLeft}>
                 <View style={styles.avatarCircle}>
@@ -255,7 +262,7 @@ export default function DashboardScreen() {
           )}
         </View>
 
-        {isCheckedIn ? (
+        {hasCheckedInToday ? (
           <View style={styles.checkedInMetaRow}>
             <View style={styles.checkedInPill}>
               <View style={styles.statusDotGreen} />
@@ -312,6 +319,28 @@ export default function DashboardScreen() {
               </Text>
             </View>
           </View>
+        ) : isCheckedOut ? (
+          <View style={styles.mainCard}>
+            <Text style={styles.sessionLabel}>SESI HARI INI SELESAI</Text>
+            <View style={styles.sessionStartRow}>
+              <Ionicons name="log-in-outline" size={22} color="#027A30" />
+              <Text style={styles.sessionStartText}>
+                Absen masuk pada{" "}
+                <Text style={styles.sessionStartBold}>
+                  {formatClock(today_status.check_in_at)}
+                </Text>
+              </Text>
+            </View>
+            <View style={styles.sessionStartRow}>
+              <Ionicons name="log-out-outline" size={22} color="#1868D5" />
+              <Text style={styles.sessionStartText}>
+                Absen pulang pada{" "}
+                <Text style={styles.sessionStartBold}>
+                  {formatClock(today_status.check_out_at)}
+                </Text>
+              </Text>
+            </View>
+          </View>
         ) : (
           <View style={styles.mainCard}>
             <View style={styles.statusCardHeader}>
@@ -356,7 +385,7 @@ export default function DashboardScreen() {
           </View>
         )}
 
-        {isCheckedIn ? (
+        {hasCheckedInToday ? (
           <>
             <View style={styles.duoCardsRow}>
               <StatusInfoCard
@@ -364,24 +393,26 @@ export default function DashboardScreen() {
                   <MaterialCommunityIcons
                     name="crosshairs-gps"
                     size={28}
-                    color="#027A30"
+                    color={gpsIconColor}
                   />
                 }
                 title={gpsCardTitle}
                 value={gpsCardValue}
-                accent="green"
+                accent={gpsCardAccent}
               />
               <StatusInfoCard
-                icon={<Ionicons name="location" size={24} color="#027A30" />}
+                icon={<Ionicons name="location" size={24} color={secondIconColor} />}
                 title={secondCardTitle}
                 value={secondCardValue}
-                accent="green"
+                accent={secondCardAccent}
               />
             </View>
-            <Pressable style={[styles.ctaButton, ctaStyle]}>
-              <MaterialCommunityIcons name="qrcode-scan" size={28} color="#FFFFFF" />
-              <Text style={styles.ctaText}>{ctaLabel}</Text>
-            </Pressable>
+            {isCheckedIn ? (
+              <Pressable style={[styles.ctaButton, ctaStyle]}>
+                <MaterialCommunityIcons name="qrcode-scan" size={28} color="#FFFFFF" />
+                <Text style={styles.ctaText}>{ctaLabel}</Text>
+              </Pressable>
+            ) : null}
           </>
         ) : (
           <>
@@ -395,30 +426,30 @@ export default function DashboardScreen() {
                   <MaterialCommunityIcons
                     name={isLate ? "map-marker-radius" : "crosshairs-gps"}
                     size={28}
-                    color="#027A30"
+                    color={gpsIconColor}
                   />
                 }
                 title={gpsCardTitle}
-                value={isLate ? "Dalam Perimeter" : gpsCardValue}
-                accent="green"
+                value={gpsCardValue}
+                accent={gpsCardAccent}
               />
               <StatusInfoCard
                 icon={
                   isLate ? (
-                    <Ionicons name="wifi" size={24} color="#027A30" />
+                    <Ionicons name="wifi" size={24} color={secondIconColor} />
                   ) : (
-                    <Ionicons name="radio-outline" size={24} color="#027A30" />
+                    <Ionicons name="radio-outline" size={24} color={secondIconColor} />
                   )
                 }
                 title={secondCardTitle}
-                value={isLate ? "Office_5G_Auth" : secondCardValue}
-                accent="green"
+                value={secondCardValue}
+                accent={secondCardAccent}
               />
             </View>
           </>
         )}
 
-        {isCheckedIn ? (
+        {hasCheckedInToday ? (
           <View style={styles.timelineSection}>
             <Text style={styles.timelineTitle}>TIMELINE HARI INI</Text>
             <View style={styles.timelineCardsRow}>
@@ -432,11 +463,21 @@ export default function DashboardScreen() {
                 </View>
               </View>
               <View style={styles.timelineCard}>
-                <Text style={styles.timelineLabel}>PERKIRAAN PULANG</Text>
-                <Text style={styles.timelineTimeMuted}>
-                  {formatClock(parsePolicyTime(policy.work_end_time, now))}
+                <Text style={styles.timelineLabel}>
+                  {isCheckedOut ? "CHECK-OUT" : "PERKIRAAN PULANG"}
                 </Text>
-                <Ionicons name="lock-closed" size={18} color="#8B909C" />
+                <Text style={isCheckedOut ? styles.timelineTime : styles.timelineTimeMuted}>
+                  {isCheckedOut
+                    ? formatClock(today_status.check_out_at)
+                    : formatClock(parsePolicyTime(policy.work_end_time, now))}
+                </Text>
+                {isCheckedOut ? (
+                  <View style={styles.timelineBadge}>
+                    <Text style={styles.timelineBadgeText}>SELESAI</Text>
+                  </View>
+                ) : (
+                  <Ionicons name="lock-closed" size={18} color="#8B909C" />
+                )}
               </View>
             </View>
           </View>
@@ -537,6 +578,7 @@ export default function DashboardScreen() {
               {buildPolicyMessage({
                 isLate,
                 isCheckedIn,
+                isCheckedOut,
                 shiftStart,
                 threshold,
                 lateToleranceMinutes: policy.late_tolerance_minutes ?? 0,
@@ -676,8 +718,8 @@ function resolveRelativeDayLabel(workDate: string | null): string {
     return "-";
   }
 
-  const targetDate = new Date(workDate);
-  if (Number.isNaN(targetDate.getTime())) {
+  const targetDate = parseDateLike(workDate);
+  if (!targetDate) {
     return workDate;
   }
 
@@ -738,8 +780,8 @@ function formatClock(value: Date | string | null): string {
     return "--:--";
   }
 
-  const date = typeof value === "string" ? new Date(value) : value;
-  if (Number.isNaN(date.getTime())) {
+  const date = parseDateLike(value);
+  if (!date) {
     return "--:--";
   }
 
@@ -755,8 +797,8 @@ function formatWeekdayDate(value: string | null): string {
     return "";
   }
 
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
+  const date = parseDateLike(value);
+  if (!date) {
     return "";
   }
 
@@ -767,13 +809,17 @@ function formatWeekdayDate(value: string | null): string {
   });
 }
 
-function formatSessionDuration(checkInAt: string | null, now: Date): string {
-  if (!checkInAt) {
+function formatSessionDuration(
+  checkInAt: string | null,
+  now: Date,
+  isSessionRunning: boolean,
+): string {
+  if (!checkInAt || !isSessionRunning) {
     return "00:00:00";
   }
 
-  const start = new Date(checkInAt);
-  if (Number.isNaN(start.getTime())) {
+  const start = parseDateLike(checkInAt);
+  if (!start) {
     return "00:00:00";
   }
 
@@ -788,6 +834,51 @@ function formatSessionDuration(checkInAt: string | null, now: Date): string {
 
 function pad(value: number): string {
   return String(value).padStart(2, "0");
+}
+
+function parseDateLike(value: Date | string | null): Date | null {
+  if (!value) {
+    return null;
+  }
+
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
+
+  const rawValue = value.trim();
+  if (!rawValue) {
+    return null;
+  }
+
+  const nativeDate = new Date(rawValue);
+  if (!Number.isNaN(nativeDate.getTime())) {
+    return nativeDate;
+  }
+
+  const normalizedDate = new Date(rawValue.replace(" ", "T"));
+  if (!Number.isNaN(normalizedDate.getTime())) {
+    return normalizedDate;
+  }
+
+  const fallbackMatch =
+    /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?$/.exec(rawValue);
+
+  if (!fallbackMatch) {
+    return null;
+  }
+
+  const [, year, month, day, hour = "0", minute = "0", second = "0"] = fallbackMatch;
+  const parsedDate = new Date(
+    Number(year),
+    Number(month) - 1,
+    Number(day),
+    Number(hour),
+    Number(minute),
+    Number(second),
+    0,
+  );
+
+  return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
 }
 
 function calculateLateMinutes(shiftStart: Date | null, now: Date): number {
@@ -813,12 +904,14 @@ function getGreeting(now: Date): string {
 function buildPolicyMessage({
   isLate,
   isCheckedIn,
+  isCheckedOut,
   shiftStart,
   threshold,
   lateToleranceMinutes,
 }: {
   isLate: boolean;
   isCheckedIn: boolean;
+  isCheckedOut: boolean;
   shiftStart: Date | null;
   threshold: Date | null;
   lateToleranceMinutes: number;
@@ -833,6 +926,10 @@ function buildPolicyMessage({
     return `Masa toleransi adalah ${formatDurationFromMinutes(
       lateToleranceMinutes,
     )} dari jam mulai shift ${formatClock(shiftStart)}. Anda saat ini berada di zona absensi yang ditentukan.`;
+  }
+
+  if (isCheckedOut) {
+    return "Absen masuk dan absen pulang hari ini sudah tercatat. Anda dapat meninjau detailnya di menu history.";
   }
 
   return `Masa toleransi ${formatDurationFromMinutes(
@@ -1497,5 +1594,4 @@ const styles = StyleSheet.create({
     color: "#1D64D7",
   },
 });
-
 
