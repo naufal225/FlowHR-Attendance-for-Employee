@@ -53,7 +53,7 @@ Semua endpoint diakses melalui base URL `EXPO_PUBLIC_API_BASE_URL`.
 
 ## Kredensial seed contoh
 
-- Email: `cholid@yaztech.co.id`
+- Email: `abc@def.co.id`
 - Password: `password`
 
 Pastikan data seed backend sudah tersedia.
