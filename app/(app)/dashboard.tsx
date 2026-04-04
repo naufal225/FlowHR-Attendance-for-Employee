@@ -602,6 +602,7 @@ export default function DashboardScreen() {
         <BottomNavItem
           icon={<Ionicons name="calendar-outline" size={26} color="#7A828F" />}
           label="CUTI"
+          onPress={() => router.replace("/(app)/leave")}
         />
         <BottomNavItem
           icon={<FontAwesome6 name="user" size={22} color="#7A828F" />}
@@ -1594,4 +1595,3 @@ const styles = StyleSheet.create({
     color: "#1D64D7",
   },
 });
-

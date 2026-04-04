@@ -305,7 +305,8 @@ export default function HistoryScreen() {
         />
         <BottomNavItem
           icon={<Ionicons name="calendar-outline" size={22} color="#7A828F" />}
-          label="JADWAL"
+          label="CUTI"
+          onPress={() => router.replace("/(app)/leave")}
         />
         <BottomNavItem
           icon={<FontAwesome6 name="user" size={18} color="#7A828F" />}
