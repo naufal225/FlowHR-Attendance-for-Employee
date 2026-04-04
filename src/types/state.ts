@@ -1,4 +1,4 @@
-import type { MobileDashboardPayload, MobileUser } from "./api";
+import type { MobileDashboardPayload, MobileLeavePagePayload, MobileUser } from "./api";
 
 export type AuthSession = {
   token: string | null;
@@ -9,6 +9,13 @@ export type AuthSession = {
 
 export type DashboardState = {
   data: MobileDashboardPayload | null;
+  isLoading: boolean;
+  isRefreshing: boolean;
+  errorMessage: string | null;
+};
+
+export type LeaveState = {
+  data: MobileLeavePagePayload | null;
   isLoading: boolean;
   isRefreshing: boolean;
   errorMessage: string | null;

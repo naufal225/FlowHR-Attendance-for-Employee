@@ -3,6 +3,7 @@ import type {
   MobileAttendanceHistoryResponse,
   MobileAttendanceRecordStatus,
   MobileDashboardResponse,
+  MobileLeavePageResponse,
   MobileLoginResponse,
   MobileMeResponse,
 } from "../types/api";
@@ -164,6 +165,24 @@ export const mobileAttendanceApi = {
         },
       },
     );
+
+    return response.data;
+  },
+};
+
+export const mobileLeaveApi = {
+  async fetchLeavePage(params?: {
+    page?: number;
+    perPage?: number;
+  }): Promise<MobileLeavePageResponse> {
+    ensureApiBaseUrl();
+
+    const response = await apiClient.get<MobileLeavePageResponse>("/employee/leave", {
+      params: {
+        page: params?.page,
+        per_page: params?.perPage,
+      },
+    });
 
     return response.data;
   },

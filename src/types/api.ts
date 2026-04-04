@@ -182,3 +182,72 @@ export type MobileAttendanceHistoryResponse = {
   data: MobileAttendanceHistoryItem[];
   meta: MobileAttendanceHistoryMeta;
 };
+
+export type MobileLeavePageLeaveItem = {
+  id: number;
+  status: string | null;
+  status_label: string | null;
+  date_start: string | null;
+  date_end: string | null;
+  duration_days: number | null;
+  reason: string | null;
+};
+
+export type MobileLeavePageActiveOrUpcomingItem = MobileLeavePageLeaveItem & {
+  approved_date: string | null;
+  created_at: string | null;
+  is_active: boolean;
+  is_upcoming: boolean;
+};
+
+export type MobileLeavePageHistoryItem = MobileLeavePageLeaveItem & {
+  approved_date: string | null;
+  created_at: string | null;
+};
+
+export type MobileLeavePageHistoryPagination = {
+  current_page: number;
+  per_page: number;
+  total_items: number;
+  total_pages: number;
+  has_more: boolean;
+};
+
+export type MobileLeavePagePayload = {
+  today_context: {
+    date: string;
+    day_name: string;
+    attendance_status: string | null;
+    attendance_status_label: string | null;
+    attendance_note: string | null;
+    is_working_day: boolean;
+    leave: MobileLeavePageLeaveItem | null;
+    attendance: {
+      id: number;
+      work_date: string | null;
+      check_in_at: string | null;
+      check_out_at: string | null;
+      record_status: string | null;
+    } | null;
+  };
+  summary: {
+    approved_leave_days_this_month: number;
+    approved_leave_requests_this_month: number;
+    active_leave_count: number;
+    upcoming_leave_count: number;
+  };
+  active_or_upcoming_leaves: MobileLeavePageActiveOrUpcomingItem[];
+  history: {
+    items: MobileLeavePageHistoryItem[];
+    pagination: MobileLeavePageHistoryPagination;
+  };
+};
+
+export type MobileLeavePageResponse = {
+  message: string;
+  data: MobileLeavePagePayload;
+  meta: {
+    server_time: string;
+    timezone: string;
+  };
+};
