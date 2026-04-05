@@ -1,6 +1,5 @@
 import {
   Feather,
-  FontAwesome6,
   Ionicons,
   MaterialCommunityIcons,
 } from "@expo/vector-icons";
@@ -14,9 +13,9 @@ import {
   StyleSheet,
   Text,
   View,
-  type ViewStyle,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { BottomNavbar } from "../../src/components/bottom-navbar";
 import {
   isUnauthorizedError,
   mobileDashboardApi,
@@ -30,6 +29,7 @@ import {
   formatSignedDurationFromMinutes,
 } from "../../src/utils/duration";
 import { buildLocationReadinessViewModel } from "../../src/utils/location-readiness";
+import { spacing, typography } from "../../src/theme/typography";
 
 type DashboardMode =
   | "not_checked_in_on_time"
@@ -588,27 +588,11 @@ export default function DashboardScreen() {
         </View>
       </ScrollView>
 
-      <View style={[styles.bottomNav, { height: navHeight, paddingBottom: navBottomPadding }]}>
-        <BottomNavItem
-          icon={<Ionicons name="home" size={28} color="#1D64D7" />}
-          label="DASHBOARD"
-          active
-        />
-        <BottomNavItem
-          icon={<MaterialCommunityIcons name="history" size={26} color="#7A828F" />}
-          label="HISTORY"
-          onPress={() => router.replace("/(app)/history")}
-        />
-        <BottomNavItem
-          icon={<Ionicons name="calendar-outline" size={26} color="#7A828F" />}
-          label="CUTI"
-          onPress={() => router.replace("/(app)/leave")}
-        />
-        <BottomNavItem
-          icon={<FontAwesome6 name="user" size={22} color="#7A828F" />}
-          label="PROFIL"
-        />
-      </View>
+      <BottomNavbar
+        activeTab="dashboard"
+        navHeight={navHeight}
+        navBottomPadding={navBottomPadding}
+      />
     </View>
   );
 }
@@ -637,31 +621,6 @@ function StatusInfoCard({
       </View>
       <Text style={styles.infoTitle}>{title}</Text>
       <Text style={styles.infoValue}>{value}</Text>
-    </View>
-  );
-}
-
-function BottomNavItem({
-  icon,
-  label,
-  active = false,
-  onPress,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  active?: boolean;
-  onPress?: () => void;
-}) {
-  return (
-    <View style={styles.navItemWrapper}>
-      <Pressable
-        style={[styles.navItem, active && styles.navItemActive]}
-        onPress={onPress}
-        disabled={!onPress}
-      >
-        {icon}
-        <Text style={[styles.navLabel, active && styles.navLabelActive]}>{label}</Text>
-      </Pressable>
     </View>
   );
 }
@@ -949,14 +908,14 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingHorizontal: 16,
     paddingBottom: 132,
-    gap: 14,
+    gap: spacing.s16,
   },
   centered: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
     padding: 24,
-    gap: 10,
+    gap: spacing.s12,
     backgroundColor: "#EEF0F3",
   },
   loadingText: {
@@ -991,10 +950,12 @@ const styles = StyleSheet.create({
   profileHeaderLeft: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: spacing.s12,
   },
   appTitle: {
-    fontSize: 18,
+    ...typography.titleCard,
+    fontSize: 19,
+    lineHeight: 23,
     fontWeight: "700",
     color: "#0E1422",
   },
@@ -1009,18 +970,20 @@ const styles = StyleSheet.create({
     backgroundColor: "#E9EEF7",
   },
   overviewBlock: {
-    gap: 8,
+    gap: spacing.s8,
   },
   overviewLabel: {
-    fontSize: 13,
+    ...typography.labelCaps,
+    fontSize: 11,
     color: "#6B7280",
     fontWeight: "700",
-    letterSpacing: 1.2,
   },
   greetingTitle: {
-    fontSize: 38,
+    ...typography.metricL,
+    fontSize: 34,
+    lineHeight: 40,
     fontWeight: "800",
-    letterSpacing: -0.8,
+    letterSpacing: -0.4,
     color: "#0D141D",
   },
   checkedInMetaRow: {
@@ -1036,13 +999,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: spacing.s8,
   },
   checkedInPillText: {
     color: "#03662E",
-    fontWeight: "800",
+    ...typography.labelCaps,
     fontSize: 11,
-    letterSpacing: 1.4,
+    fontWeight: "800",
+    letterSpacing: 0.8,
   },
   dateText: {
     color: "#374151",
@@ -1055,7 +1019,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
   },
   statusLocationCol: {
-    gap: 8,
+    gap: spacing.s8,
   },
   alignRight: {
     alignItems: "flex-end",
@@ -1063,7 +1027,7 @@ const styles = StyleSheet.create({
   rowInline: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: spacing.s8,
   },
   statusDotBlue: {
     width: 12,
@@ -1090,25 +1054,25 @@ const styles = StyleSheet.create({
   },
   statusPrimaryText: {
     color: "#0B4FAF",
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: "800",
-    letterSpacing: 0.8,
+    letterSpacing: 0.6,
   },
   statusDangerText: {
     color: "#BE1010",
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "800",
   },
   locationText: {
     color: "#027A30",
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "800",
   },
   mainCard: {
     borderRadius: 22,
     backgroundColor: "#F7F8FA",
     padding: 18,
-    gap: 8,
+    gap: spacing.s8,
   },
   statusCardHeader: {
     flexDirection: "row",
@@ -1123,9 +1087,9 @@ const styles = StyleSheet.create({
   },
   badgeOnTimeText: {
     color: "#18488D",
-    fontSize: 12,
+    ...typography.labelCaps,
+    fontSize: 11,
     fontWeight: "800",
-    letterSpacing: 0.8,
   },
   badgeLate: {
     borderRadius: 999,
@@ -1135,21 +1099,21 @@ const styles = StyleSheet.create({
   },
   badgeLateText: {
     color: "#B71D1D",
-    fontSize: 12,
+    ...typography.labelCaps,
+    fontSize: 11,
     fontWeight: "800",
-    letterSpacing: 0.8,
   },
   currentTimeLabel: {
-    fontSize: 17,
+    fontSize: 15,
     color: "#2E3643",
     marginTop: 2,
   },
   currentTimeValue: {
-    fontSize: 64,
-    lineHeight: 70,
+    ...typography.metricXL,
+    fontSize: 50,
+    lineHeight: 56,
     color: "#0E141B",
-    fontWeight: "900",
-    letterSpacing: -1.2,
+    letterSpacing: -0.4,
   },
   lateBanner: {
     borderRadius: 999,
@@ -1159,20 +1123,20 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 10,
+    gap: spacing.s8,
     alignSelf: "center",
     marginTop: 4,
   },
   lateBannerText: {
     color: "#A51717",
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: "700",
   },
   divider: {
     height: 1,
     backgroundColor: "#D8DCE3",
-    marginTop: 14,
-    marginBottom: 6,
+    marginTop: spacing.s12,
+    marginBottom: spacing.s8,
   },
   shiftRow: {
     flexDirection: "row",
@@ -1185,22 +1149,24 @@ const styles = StyleSheet.create({
     backgroundColor: "#D8DCE3",
   },
   shiftLabel: {
-    fontSize: 12,
+    ...typography.labelCaps,
+    fontSize: 11,
     color: "#3C4654",
     fontWeight: "800",
-    letterSpacing: 1.5,
     marginBottom: 4,
   },
   shiftValue: {
     color: "#0D141D",
-    fontSize: 18,
+    ...typography.titleCard,
+    fontSize: 16,
+    lineHeight: 20,
     fontWeight: "800",
   },
   sessionLabel: {
-    fontSize: 13,
+    ...typography.labelCaps,
+    fontSize: 11,
     color: "#2F3846",
     fontWeight: "800",
-    letterSpacing: 2,
   },
   sessionRow: {
     flexDirection: "row",
@@ -1208,11 +1174,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   sessionTimer: {
-    fontSize: 56,
-    lineHeight: 62,
+    ...typography.metricL,
+    fontSize: 44,
+    lineHeight: 50,
     color: "#0D141D",
-    fontWeight: "900",
-    letterSpacing: -1.2,
+    letterSpacing: -0.4,
   },
   clockCircle: {
     width: 96,
@@ -1225,10 +1191,12 @@ const styles = StyleSheet.create({
   sessionStartRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: spacing.s8,
   },
   sessionStartText: {
-    fontSize: 16,
+    ...typography.body,
+    fontSize: 14,
+    lineHeight: 20,
     color: "#2B3545",
   },
   sessionStartBold: {
@@ -1242,7 +1210,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 10,
+    gap: spacing.s8,
     shadowColor: "#1D64D7",
     shadowOpacity: 0.23,
     shadowRadius: 9,
@@ -1258,12 +1226,14 @@ const styles = StyleSheet.create({
   },
   ctaText: {
     color: "#FFFFFF",
-    fontSize: 18,
+    ...typography.titleCard,
+    fontSize: 17,
+    lineHeight: 22,
     fontWeight: "800",
   },
   duoCardsRow: {
     flexDirection: "row",
-    gap: 12,
+    gap: spacing.s12,
   },
   infoCard: {
     flex: 1,
@@ -1301,29 +1271,30 @@ const styles = StyleSheet.create({
   },
   infoTitle: {
     color: "#2F3846",
+    ...typography.labelCaps,
     fontSize: 11,
     fontWeight: "800",
-    letterSpacing: 1.4,
     marginBottom: 4,
   },
   infoValue: {
     color: "#0E141D",
-    fontSize: 16,
-    fontWeight: "700",
+    ...typography.body,
+    fontSize: 14,
     lineHeight: 20,
+    fontWeight: "700",
   },
   timelineSection: {
-    gap: 12,
+    gap: spacing.s12,
   },
   timelineTitle: {
     color: "#313A49",
-    fontSize: 14,
+    ...typography.labelCaps,
+    fontSize: 12,
     fontWeight: "900",
-    letterSpacing: 1.6,
   },
   timelineCardsRow: {
     flexDirection: "row",
-    gap: 12,
+    gap: spacing.s12,
   },
   timelineCard: {
     flex: 1,
@@ -1335,19 +1306,22 @@ const styles = StyleSheet.create({
   },
   timelineLabel: {
     color: "#2F3846",
+    ...typography.labelCaps,
     fontSize: 11,
     fontWeight: "800",
-    letterSpacing: 1,
   },
   timelineTime: {
     color: "#0E141D",
-    fontSize: 34,
-    lineHeight: 38,
+    ...typography.titleCard,
+    fontSize: 26,
+    lineHeight: 30,
     fontWeight: "900",
   },
   timelineTimeMuted: {
     color: "#6D737E",
-    fontSize: 22,
+    ...typography.titleCard,
+    fontSize: 18,
+    lineHeight: 23,
     fontWeight: "800",
   },
   timelineBadge: {
@@ -1359,24 +1333,26 @@ const styles = StyleSheet.create({
   },
   timelineBadgeText: {
     color: "#067032",
-    fontSize: 11,
+    ...typography.labelCaps,
+    fontSize: 10,
     fontWeight: "800",
-    letterSpacing: 1,
   },
   attendanceSummaryCard: {
     borderRadius: 18,
     backgroundColor: "#F2F3F6",
     padding: 14,
-    gap: 12,
+    gap: spacing.s12,
   },
   attendanceSummaryTitle: {
-    fontSize: 22,
+    ...typography.titleCard,
+    fontSize: 20,
+    lineHeight: 24,
     fontWeight: "800",
     color: "#161E2B",
   },
   attendanceSummaryStatRow: {
     flexDirection: "row",
-    gap: 10,
+    gap: spacing.s8,
   },
   attendanceSummaryStatBox: {
     flex: 1,
@@ -1386,26 +1362,27 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     minHeight: 80,
     justifyContent: "center",
-    gap: 6,
+    gap: spacing.s6,
   },
   attendanceSummaryStatLabel: {
     color: "#8A919E",
+    ...typography.labelCaps,
     fontSize: 11,
     fontWeight: "800",
-    letterSpacing: 1.3,
   },
   attendanceSummaryStatValueRow: {
     flexDirection: "row",
     alignItems: "baseline",
-    gap: 6,
+    gap: spacing.s6,
     flexWrap: "wrap",
   },
   attendanceSummaryStatValue: {
     color: "#111827",
-    fontSize: 34,
-    lineHeight: 36,
+    ...typography.titleCard,
+    fontSize: 26,
+    lineHeight: 30,
     fontWeight: "900",
-    letterSpacing: -0.7,
+    letterSpacing: -0.3,
   },
   attendanceSummaryDelta: {
     fontSize: 12,
@@ -1419,9 +1396,9 @@ const styles = StyleSheet.create({
   },
   attendanceSummaryHoursSuffix: {
     color: "#4B5563",
-    fontSize: 12,
+    ...typography.labelCaps,
+    fontSize: 11,
     fontWeight: "800",
-    letterSpacing: 1,
   },
   attendanceSummaryRecentHeader: {
     flexDirection: "row",
@@ -1430,17 +1407,18 @@ const styles = StyleSheet.create({
   },
   attendanceSummaryRecentTitle: {
     color: "#8A919E",
+    ...typography.labelCaps,
     fontSize: 11,
     fontWeight: "800",
-    letterSpacing: 1.3,
   },
   attendanceSummaryRecentLink: {
     color: "#1D64D7",
+    ...typography.caption,
     fontSize: 12,
     fontWeight: "700",
   },
   attendanceSummaryActivityList: {
-    gap: 8,
+    gap: spacing.s8,
   },
   activityRow: {
     flexDirection: "row",
@@ -1450,7 +1428,7 @@ const styles = StyleSheet.create({
   activityLeft: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: spacing.s8,
     flex: 1,
   },
   activityIconCircle: {
@@ -1463,22 +1441,28 @@ const styles = StyleSheet.create({
   },
   activityLabel: {
     color: "#1F2937",
-    fontSize: 15,
+    ...typography.body,
+    fontSize: 14,
     fontWeight: "700",
   },
   activityTitle: {
     color: "#7B8391",
+    ...typography.caption,
     fontSize: 12,
     marginTop: 2,
   },
   activityTime: {
     color: "#111827",
-    fontSize: 16,
+    ...typography.body,
+    fontSize: 14,
+    lineHeight: 20,
     fontWeight: "700",
   },
   attendanceSummaryEmpty: {
     color: "#6B7280",
+    ...typography.body,
     fontSize: 13,
+    lineHeight: 19,
   },
   attendanceInsightBanner: {
     borderRadius: 18,
@@ -1486,7 +1470,7 @@ const styles = StyleSheet.create({
     paddingVertical: 11,
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: spacing.s8,
   },
   attendanceInsightAhead: {
     backgroundColor: "#F5D98F",
@@ -1508,8 +1492,9 @@ const styles = StyleSheet.create({
   attendanceInsightText: {
     flex: 1,
     color: "#6B4F00",
+    ...typography.body,
     fontSize: 13,
-    lineHeight: 20,
+    lineHeight: 19,
     fontWeight: "600",
   },
   policyCard: {
@@ -1517,7 +1502,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#E8EAEE",
     padding: 14,
     flexDirection: "row",
-    gap: 12,
+    gap: spacing.s12,
   },
   policyCardLate: {
     backgroundColor: "#F4EAD5",
@@ -1538,60 +1523,19 @@ const styles = StyleSheet.create({
   },
   policyTextWrap: {
     flex: 1,
-    gap: 4,
+    gap: spacing.s4,
   },
   policyTitle: {
     color: "#1D2431",
-    fontSize: 15,
+    ...typography.body,
+    fontSize: 14,
+    lineHeight: 20,
     fontWeight: "800",
   },
   policyDescription: {
     color: "#4A5361",
+    ...typography.body,
     fontSize: 13,
-    lineHeight: 20,
-  },
-  bottomNav: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 86,
-    backgroundColor: "#F5F6F8",
-    borderTopLeftRadius: 22,
-    borderTopRightRadius: 22,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-around",
-    paddingHorizontal: 8,
-    paddingBottom: 8,
-  },
-  navItemWrapper: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  navItem: {
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 4,
-    borderRadius: 20,
-    width: 82,
-    height: 64,
-  },
-  navItemActive: {
-    backgroundColor: "#DCE8FB",
-    shadowColor: "#1D64D7",
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 3,
-  } as ViewStyle,
-  navLabel: {
-    fontSize: 12,
-    color: "#6C7482",
-    fontWeight: "700",
-    letterSpacing: 0.8,
-  },
-  navLabelActive: {
-    color: "#1D64D7",
+    lineHeight: 19,
   },
 });

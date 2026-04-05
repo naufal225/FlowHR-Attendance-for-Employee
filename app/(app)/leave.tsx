@@ -1,11 +1,9 @@
 import {
   Feather,
-  FontAwesome6,
   Ionicons,
-  MaterialCommunityIcons,
 } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -21,7 +19,9 @@ import {
   mobileLeaveApi,
   normalizeApiError,
 } from "../../src/lib/api";
+import { BottomNavbar } from "../../src/components/bottom-navbar";
 import { useAuthStore } from "../../src/store/auth-store";
+import { spacing, typography } from "../../src/theme/typography";
 import type {
   MobileLeavePageHistoryItem,
   MobileLeavePageLeaveItem,
@@ -305,52 +305,11 @@ export default function LeaveScreen() {
         ) : null}
       </ScrollView>
 
-      <View style={[styles.bottomNav, { height: navHeight, paddingBottom: navBottomPadding }]}>
-        <BottomNavItem
-          icon={<Ionicons name="home" size={24} color="#7A828F" />}
-          label="HOME"
-          onPress={() => router.replace("/(app)/dashboard")}
-        />
-        <BottomNavItem
-          icon={<MaterialCommunityIcons name="history" size={24} color="#7A828F" />}
-          label="HISTORY"
-          onPress={() => router.replace("/(app)/history")}
-        />
-        <BottomNavItem
-          icon={<Ionicons name="calendar-outline" size={24} color="#1D64D7" />}
-          label="LEAVE"
-          active
-        />
-        <BottomNavItem
-          icon={<FontAwesome6 name="user" size={18} color="#7A828F" />}
-          label="PROFIL"
-        />
-      </View>
-    </View>
-  );
-}
-
-function BottomNavItem({
-  icon,
-  label,
-  active = false,
-  onPress,
-}: {
-  icon: ReactNode;
-  label: string;
-  active?: boolean;
-  onPress?: () => void;
-}) {
-  return (
-    <View style={styles.navItemWrapper}>
-      <Pressable
-        style={[styles.navItem, active && styles.navItemActive]}
-        onPress={onPress}
-        disabled={!onPress}
-      >
-        {icon}
-        <Text style={[styles.navLabel, active && styles.navLabelActive]}>{label}</Text>
-      </Pressable>
+      <BottomNavbar
+        activeTab="leave"
+        navHeight={navHeight}
+        navBottomPadding={navBottomPadding}
+      />
     </View>
   );
 }
@@ -565,14 +524,14 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 16,
-    gap: 16,
+    gap: spacing.s16,
   },
   centered: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 24,
-    gap: 10,
+    gap: spacing.s12,
     backgroundColor: "#EEF0F3",
   },
   loadingText: {
@@ -618,20 +577,19 @@ const styles = StyleSheet.create({
     height: 36,
   },
   headerTitle: {
-    fontSize: 32,
-    lineHeight: 36,
-    fontWeight: "800",
+    ...typography.titlePage,
+    fontSize: 24,
+    lineHeight: 28,
     color: "#0E1522",
-    letterSpacing: -0.4,
   },
   todayCardLeave: {
     borderRadius: 22,
     backgroundColor: "#1D64D7",
     paddingHorizontal: 18,
-    paddingVertical: 20,
+    paddingVertical: 18,
     flexDirection: "row",
     alignItems: "center",
-    gap: 14,
+    gap: spacing.s12,
   },
   todayCardWorking: {
     borderRadius: 14,
@@ -642,7 +600,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: spacing.s12,
   },
   todayIconWrapLeave: {
     width: 54,
@@ -662,49 +620,45 @@ const styles = StyleSheet.create({
   },
   todayTextWrap: {
     flex: 1,
-    gap: 2,
+    gap: spacing.s4,
   },
   todayLabelLeave: {
-    fontSize: 15,
+    ...typography.caption,
     color: "#DDEAFF",
-    fontWeight: "600",
   },
   todayValueLeave: {
-    fontSize: 34,
-    lineHeight: 38,
+    ...typography.metricL,
+    fontSize: 27,
+    lineHeight: 32,
     color: "#FFFFFF",
-    fontWeight: "800",
-    letterSpacing: -0.4,
   },
   todayNoteLeave: {
-    fontSize: 12,
+    ...typography.caption,
     color: "#E9F1FF",
-    lineHeight: 17,
+    fontWeight: "500",
   },
   todayLabelWorking: {
-    fontSize: 14,
+    ...typography.labelCaps,
+    fontSize: 11,
     color: "#111827",
     fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
   },
   todayValueWorking: {
-    fontSize: 25,
-    lineHeight: 30,
+    ...typography.titleCard,
+    fontSize: 24,
+    lineHeight: 28,
     color: "#0D7F3D",
-    fontWeight: "800",
-    letterSpacing: -0.2,
   },
   todayNoteWorking: {
-    fontSize: 12,
+    ...typography.caption,
     color: "#556171",
-    lineHeight: 17,
+    fontWeight: "500",
   },
   calendarCard: {
     borderRadius: 22,
     backgroundColor: "#F7F8FA",
     padding: 16,
-    gap: 12,
+    gap: spacing.s12,
   },
   calendarHeader: {
     flexDirection: "row",
@@ -712,11 +666,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   calendarMonthText: {
-    fontSize: 28,
-    lineHeight: 32,
-    fontWeight: "800",
+    ...typography.titleCard,
+    fontSize: 21,
+    lineHeight: 25,
     color: "#131A26",
-    letterSpacing: -0.3,
   },
   calendarNavRow: {
     flexDirection: "row",
@@ -739,7 +692,8 @@ const styles = StyleSheet.create({
   weekdayLabel: {
     width: `${100 / 7}%`,
     textAlign: "center",
-    fontSize: 12,
+    ...typography.caption,
+    fontSize: 11,
     color: "#7A8290",
     fontWeight: "700",
   },
@@ -752,12 +706,12 @@ const styles = StyleSheet.create({
     width: `${100 / 7}%`,
     alignItems: "center",
     justifyContent: "center",
-    minHeight: 52,
+    minHeight: 50,
   },
   dayNumberWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     borderWidth: 2,
     borderColor: "transparent",
     alignItems: "center",
@@ -771,8 +725,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#F3F8FF",
   },
   dayNumberText: {
-    fontSize: 23,
-    lineHeight: 27,
+    fontSize: 19,
+    lineHeight: 23,
     color: "#101621",
     fontWeight: "600",
   },
@@ -801,85 +755,40 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#E4E7EC",
     padding: 16,
-    gap: 12,
+    gap: spacing.s12,
   },
   detailTitle: {
-    fontSize: 16,
-    lineHeight: 20,
+    ...typography.labelCaps,
+    fontSize: 12,
+    lineHeight: 15,
     color: "#121A28",
     fontWeight: "800",
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
   },
   detailRow: {
-    gap: 6,
+    gap: spacing.s6,
   },
   detailLabel: {
-    fontSize: 12,
+    ...typography.labelCaps,
+    fontSize: 11,
     color: "#6C7482",
     fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.9,
   },
   detailValue: {
-    fontSize: 20,
-    lineHeight: 25,
+    ...typography.titleCard,
+    fontSize: 17,
+    lineHeight: 22,
     color: "#111827",
     fontWeight: "700",
-    letterSpacing: -0.15,
   },
   detailReason: {
-    fontSize: 16,
-    lineHeight: 23,
+    ...typography.body,
+    fontSize: 15,
+    lineHeight: 21,
     color: "#1F2937",
     fontWeight: "500",
   },
   detailDivider: {
     height: 1,
     backgroundColor: "#E3E7EE",
-  },
-  bottomNav: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 86,
-    backgroundColor: "#F5F6F8",
-    borderTopLeftRadius: 22,
-    borderTopRightRadius: 22,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-around",
-    paddingHorizontal: 8,
-    paddingBottom: 8,
-  },
-  navItemWrapper: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  navItem: {
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 4,
-    borderRadius: 20,
-    width: 82,
-    height: 64,
-  },
-  navItemActive: {
-    backgroundColor: "#DCE8FB",
-    shadowColor: "#1D64D7",
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 3,
-  },
-  navLabel: {
-    fontSize: 12,
-    color: "#6C7482",
-    fontWeight: "700",
-    letterSpacing: 0.8,
-  },
-  navLabelActive: {
-    color: "#1D64D7",
   },
 });

@@ -1,13 +1,11 @@
 import {
   Feather,
-  FontAwesome6,
   Ionicons,
   MaterialCommunityIcons,
 } from "@expo/vector-icons";
 import { router } from "expo-router";
 import {
   type ComponentProps,
-  type ReactNode,
   useCallback,
   useEffect,
   useState,
@@ -26,6 +24,7 @@ import {
   mobileAttendanceApi,
   normalizeApiError,
 } from "../../src/lib/api";
+import { BottomNavbar } from "../../src/components/bottom-navbar";
 import { useAuthStore } from "../../src/store/auth-store";
 import type {
   MobileAttendanceHistoryItem,
@@ -292,27 +291,11 @@ export default function HistoryScreen() {
         )}
       </ScrollView>
 
-      <View style={[styles.bottomNav, { height: navHeight, paddingBottom: navBottomPadding }]}>
-        <BottomNavItem
-          icon={<MaterialCommunityIcons name="view-grid-outline" size={24} color="#7A828F" />}
-          label="DASHBOARD"
-          onPress={() => router.replace("/(app)/dashboard")}
-        />
-        <BottomNavItem
-          icon={<MaterialCommunityIcons name="history" size={24} color="#1D64D7" />}
-          label="HISTORY"
-          active
-        />
-        <BottomNavItem
-          icon={<Ionicons name="calendar-outline" size={22} color="#7A828F" />}
-          label="CUTI"
-          onPress={() => router.replace("/(app)/leave")}
-        />
-        <BottomNavItem
-          icon={<FontAwesome6 name="user" size={18} color="#7A828F" />}
-          label="PROFIL"
-        />
-      </View>
+      <BottomNavbar
+        activeTab="history"
+        navHeight={navHeight}
+        navBottomPadding={navBottomPadding}
+      />
     </View>
   );
 }
@@ -509,31 +492,6 @@ function EmptyHistoryState({
           <Text style={styles.emptyButtonText}>Atur Ulang Filter</Text>
         </Pressable>
       ) : null}
-    </View>
-  );
-}
-
-function BottomNavItem({
-  icon,
-  label,
-  active = false,
-  onPress,
-}: {
-  icon: ReactNode;
-  label: string;
-  active?: boolean;
-  onPress?: () => void;
-}) {
-  return (
-    <View style={styles.navItemWrapper}>
-      <Pressable
-        style={[styles.navItem, active && styles.navItemActive]}
-        onPress={onPress}
-        disabled={!onPress}
-      >
-        {icon}
-        <Text style={[styles.navLabel, active && styles.navLabelActive]}>{label}</Text>
-      </Pressable>
     </View>
   );
 }
@@ -1088,50 +1046,6 @@ const styles = StyleSheet.create({
   },
   paginationCurrent: {
     color: "#1C66D5",
-  },
-  bottomNav: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 86,
-    backgroundColor: "#F5F6F8",
-    borderTopLeftRadius: 22,
-    borderTopRightRadius: 22,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-around",
-    paddingHorizontal: 8,
-    paddingBottom: 8,
-  },
-  navItemWrapper: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  navItem: {
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 4,
-    borderRadius: 20,
-    width: 82,
-    height: 64,
-  },
-  navItemActive: {
-    backgroundColor: "#DCE8FB",
-    shadowColor: "#1D64D7",
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 3,
-  },
-  navLabel: {
-    fontSize: 12,
-    color: "#6C7482",
-    fontWeight: "700",
-    letterSpacing: 0.8,
-  },
-  navLabelActive: {
-    color: "#1D64D7",
   },
 });
 
