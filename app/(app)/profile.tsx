@@ -15,7 +15,6 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useShallow } from "zustand/react/shallow";
 import { BottomNavbar } from "../../src/components/bottom-navbar";
-import { LoadingScreen } from "../../src/components/loading-screen";
 import {
   mobileProfileApi,
   normalizeApiError,
@@ -69,6 +68,7 @@ export default function ProfileScreen() {
   const [hideCurrentPassword, setHideCurrentPassword] = useState(true);
   const [hideNewPassword, setHideNewPassword] = useState(true);
   const [hideConfirmPassword, setHideConfirmPassword] = useState(true);
+  const [isPasswordFormVisible, setIsPasswordFormVisible] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
 
   const navBottomPadding = Math.max(insets.bottom, 8);
@@ -250,6 +250,10 @@ export default function ProfileScreen() {
       setPasswordCurrent("");
       setPasswordNew("");
       setPasswordConfirm("");
+      setHideCurrentPassword(true);
+      setHideNewPassword(true);
+      setHideConfirmPassword(true);
+      setIsPasswordFormVisible(false);
       showNotice({ type: "success", message: response.message });
     } catch (error) {
       const apiError = normalizeApiError(error);
@@ -275,8 +279,77 @@ export default function ProfileScreen() {
     showNotice,
   ]);
 
+  const handleOpenPasswordForm = useCallback(() => {
+    clearNotice();
+    setPasswordErrors({});
+    setIsPasswordFormVisible(true);
+  }, [clearNotice]);
+
+  const handleCancelPasswordForm = useCallback(() => {
+    setPasswordCurrent("");
+    setPasswordNew("");
+    setPasswordConfirm("");
+    setPasswordErrors({});
+    setHideCurrentPassword(true);
+    setHideNewPassword(true);
+    setHideConfirmPassword(true);
+    setIsPasswordFormVisible(false);
+  }, []);
+
   if (isBootstrapping) {
-    return <LoadingScreen label="Menyiapkan profil..." />;
+    return (
+      <View style={styles.screen}>
+        <ScrollView
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingTop: scrollTopPadding, paddingBottom: scrollBottomPadding },
+          ]}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.skeletonProfileCard}>
+            <View style={styles.skeletonAvatar} />
+            <View style={[styles.skeletonLine, styles.skeletonNameLine]} />
+            <View style={[styles.skeletonLine, styles.skeletonEmailLine]} />
+          </View>
+
+          <View style={styles.skeletonSection}>
+            <View style={styles.skeletonSectionHeader}>
+              <View style={[styles.skeletonLine, styles.skeletonSectionTitle]} />
+              <View style={[styles.skeletonLine, styles.skeletonSectionLink]} />
+            </View>
+
+            <View style={styles.skeletonFieldGroup}>
+              <View style={[styles.skeletonLine, styles.skeletonFieldLabel]} />
+              <View style={styles.skeletonInput} />
+            </View>
+
+            <View style={styles.skeletonFieldGroup}>
+              <View style={[styles.skeletonLine, styles.skeletonFieldLabel]} />
+              <View style={styles.skeletonInput} />
+            </View>
+          </View>
+
+          <View style={styles.skeletonSection}>
+            <View style={styles.skeletonSectionHeader}>
+              <View style={[styles.skeletonLine, styles.skeletonSectionTitle]} />
+              <View style={[styles.skeletonLine, styles.skeletonSectionLink]} />
+            </View>
+
+            <View style={styles.skeletonFieldGroup}>
+              <View style={[styles.skeletonLine, styles.skeletonFieldLabel]} />
+              <View style={styles.skeletonInput} />
+            </View>
+
+            <View style={styles.skeletonFieldGroup}>
+              <View style={[styles.skeletonLine, styles.skeletonFieldLabel]} />
+              <View style={styles.skeletonInput} />
+            </View>
+          </View>
+
+          <View style={styles.skeletonButton} />
+        </ScrollView>
+      </View>
+    );
   }
 
   return (
@@ -424,101 +497,127 @@ export default function ProfileScreen() {
             </View>
 
             <View style={styles.sectionCard}>
-              <Text style={styles.sectionTitle}>Keamanan</Text>
-
-              <Text style={styles.fieldLabel}>Password Saat Ini</Text>
-              <View style={styles.inputWrapper}>
-                <TextInput
-                  value={passwordCurrent}
-                  onChangeText={setPasswordCurrent}
-                  placeholder="Masukkan password saat ini"
-                  placeholderTextColor="#94A3B8"
-                  secureTextEntry={hideCurrentPassword}
-                  style={styles.input}
-                />
-                <Pressable
-                  style={styles.inputIconButton}
-                  onPress={() => setHideCurrentPassword((prev) => !prev)}
-                >
-                  <Ionicons
-                    name={hideCurrentPassword ? "eye-off" : "eye"}
-                    size={18}
-                    color="#64748B"
-                  />
-                </Pressable>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Keamanan</Text>
+                {!isPasswordFormVisible ? (
+                  <Pressable onPress={handleOpenPasswordForm} hitSlop={6}>
+                    <Text style={styles.sectionLink}>Ubah Password</Text>
+                  </Pressable>
+                ) : null}
               </View>
-              {passwordErrors.current_password ? (
-                <Text style={styles.fieldError}>{passwordErrors.current_password}</Text>
-              ) : null}
 
-              <Text style={[styles.fieldLabel, styles.fieldSpacing]}>Password Baru</Text>
-              <View style={styles.inputWrapper}>
-                <TextInput
-                  value={passwordNew}
-                  onChangeText={setPasswordNew}
-                  placeholder="Masukkan password baru"
-                  placeholderTextColor="#94A3B8"
-                  secureTextEntry={hideNewPassword}
-                  style={styles.input}
-                />
-                <Pressable
-                  style={styles.inputIconButton}
-                  onPress={() => setHideNewPassword((prev) => !prev)}
-                >
-                  <Ionicons
-                    name={hideNewPassword ? "eye-off" : "eye"}
-                    size={18}
-                    color="#64748B"
-                  />
-                </Pressable>
-              </View>
-              {passwordErrors.new_password ? (
-                <Text style={styles.fieldError}>{passwordErrors.new_password}</Text>
-              ) : null}
-
-              <Text style={[styles.fieldLabel, styles.fieldSpacing]}>
-                Konfirmasi Password Baru
-              </Text>
-              <View style={styles.inputWrapper}>
-                <TextInput
-                  value={passwordConfirm}
-                  onChangeText={setPasswordConfirm}
-                  placeholder="Ulangi password baru"
-                  placeholderTextColor="#94A3B8"
-                  secureTextEntry={hideConfirmPassword}
-                  style={styles.input}
-                />
-                <Pressable
-                  style={styles.inputIconButton}
-                  onPress={() => setHideConfirmPassword((prev) => !prev)}
-                >
-                  <Ionicons
-                    name={hideConfirmPassword ? "eye-off" : "eye"}
-                    size={18}
-                    color="#64748B"
-                  />
-                </Pressable>
-              </View>
-              {passwordErrors.new_password_confirmation ? (
-                <Text style={styles.fieldError}>
-                  {passwordErrors.new_password_confirmation}
+              {!isPasswordFormVisible ? (
+                <Text style={styles.securityHintText}>
+                  Tekan "Ubah Password" untuk menampilkan form penggantian password.
                 </Text>
-              ) : null}
+              ) : (
+                <>
+                  <Text style={styles.fieldLabel}>Password Saat Ini</Text>
+                  <View style={styles.inputWrapper}>
+                    <TextInput
+                      value={passwordCurrent}
+                      onChangeText={setPasswordCurrent}
+                      placeholder="Masukkan password saat ini"
+                      placeholderTextColor="#94A3B8"
+                      secureTextEntry={hideCurrentPassword}
+                      style={styles.input}
+                    />
+                    <Pressable
+                      style={styles.inputIconButton}
+                      onPress={() => setHideCurrentPassword((prev) => !prev)}
+                    >
+                      <Ionicons
+                        name={hideCurrentPassword ? "eye-off" : "eye"}
+                        size={18}
+                        color="#64748B"
+                      />
+                    </Pressable>
+                  </View>
+                  {passwordErrors.current_password ? (
+                    <Text style={styles.fieldError}>{passwordErrors.current_password}</Text>
+                  ) : null}
 
-              <Pressable
-                style={[
-                  styles.secondaryButton,
-                  isSavingPassword && styles.buttonDisabled,
-                ]}
-                onPress={handleUpdatePassword}
-                disabled={isSavingPassword}
-              >
-                {isSavingPassword ? (
-                  <ActivityIndicator color="#0F5BD6" />
-                ) : (
-                  <Text style={styles.secondaryButtonText}>Ubah Password</Text>
-                )}
-              </Pressable>
+                  <Text style={[styles.fieldLabel, styles.fieldSpacing]}>Password Baru</Text>
+                  <View style={styles.inputWrapper}>
+                    <TextInput
+                      value={passwordNew}
+                      onChangeText={setPasswordNew}
+                      placeholder="Masukkan password baru"
+                      placeholderTextColor="#94A3B8"
+                      secureTextEntry={hideNewPassword}
+                      style={styles.input}
+                    />
+                    <Pressable
+                      style={styles.inputIconButton}
+                      onPress={() => setHideNewPassword((prev) => !prev)}
+                    >
+                      <Ionicons
+                        name={hideNewPassword ? "eye-off" : "eye"}
+                        size={18}
+                        color="#64748B"
+                      />
+                    </Pressable>
+                  </View>
+                  {passwordErrors.new_password ? (
+                    <Text style={styles.fieldError}>{passwordErrors.new_password}</Text>
+                  ) : null}
+
+                  <Text style={[styles.fieldLabel, styles.fieldSpacing]}>
+                    Konfirmasi Password Baru
+                  </Text>
+                  <View style={styles.inputWrapper}>
+                    <TextInput
+                      value={passwordConfirm}
+                      onChangeText={setPasswordConfirm}
+                      placeholder="Ulangi password baru"
+                      placeholderTextColor="#94A3B8"
+                      secureTextEntry={hideConfirmPassword}
+                      style={styles.input}
+                    />
+                    <Pressable
+                      style={styles.inputIconButton}
+                      onPress={() => setHideConfirmPassword((prev) => !prev)}
+                    >
+                      <Ionicons
+                        name={hideConfirmPassword ? "eye-off" : "eye"}
+                        size={18}
+                        color="#64748B"
+                      />
+                    </Pressable>
+                  </View>
+                  {passwordErrors.new_password_confirmation ? (
+                    <Text style={styles.fieldError}>
+                      {passwordErrors.new_password_confirmation}
+                    </Text>
+                  ) : null}
+
+                  <View style={styles.passwordActions}>
+                    <Pressable
+                      style={[styles.cancelButton, isSavingPassword && styles.buttonDisabled]}
+                      onPress={handleCancelPasswordForm}
+                      disabled={isSavingPassword}
+                    >
+                      <Text style={styles.cancelButtonText}>Batal</Text>
+                    </Pressable>
+
+                    <Pressable
+                      style={[
+                        styles.secondaryButton,
+                        styles.passwordSubmitButton,
+                        isSavingPassword && styles.buttonDisabled,
+                      ]}
+                      onPress={handleUpdatePassword}
+                      disabled={isSavingPassword}
+                    >
+                      {isSavingPassword ? (
+                        <ActivityIndicator color="#0F5BD6" />
+                      ) : (
+                        <Text style={styles.secondaryButtonText}>Simpan Password</Text>
+                      )}
+                    </Pressable>
+                  </View>
+                </>
+              )}
             </View>
 
             <Pressable style={styles.logoutCard} onPress={logout}>
@@ -594,6 +693,71 @@ const styles = StyleSheet.create({
   },
   noticeErrorText: {
     color: "#991B1B",
+  },
+  skeletonProfileCard: {
+    backgroundColor: "#EBEEF2",
+    borderRadius: 26,
+    paddingVertical: 22,
+    paddingHorizontal: 16,
+    alignItems: "center",
+    gap: 10,
+  },
+  skeletonAvatar: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: "#DEE3EA",
+  },
+  skeletonLine: {
+    backgroundColor: "#DEE3EA",
+    borderRadius: 999,
+    height: 14,
+  },
+  skeletonNameLine: {
+    width: 132,
+    marginTop: 8,
+  },
+  skeletonEmailLine: {
+    width: 98,
+    height: 11,
+  },
+  skeletonSection: {
+    backgroundColor: "#F0F2F6",
+    borderRadius: 22,
+    paddingVertical: 18,
+    paddingHorizontal: 16,
+    gap: 12,
+  },
+  skeletonSectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  skeletonSectionTitle: {
+    width: 88,
+    height: 12,
+  },
+  skeletonSectionLink: {
+    width: 56,
+    height: 11,
+  },
+  skeletonFieldGroup: {
+    gap: 8,
+  },
+  skeletonFieldLabel: {
+    width: 84,
+    height: 10,
+  },
+  skeletonInput: {
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: "#DEE3EA",
+  },
+  skeletonButton: {
+    height: 54,
+    borderRadius: 18,
+    backgroundColor: "#DEE3EA",
+    marginTop: 4,
   },
   profileCard: {
     backgroundColor: "#F7F8FA",
@@ -698,6 +862,12 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#1D4ED8",
   },
+  securityHintText: {
+    ...typography.body,
+    color: "#64748B",
+    fontSize: 13,
+    lineHeight: 19,
+  },
   fieldLabel: {
     fontSize: 11,
     fontWeight: "800",
@@ -755,6 +925,32 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "700",
     color: "#0F5BD6",
+  },
+  passwordActions: {
+    marginTop: spacing.s12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  passwordSubmitButton: {
+    marginTop: 0,
+    flex: 1,
+  },
+  cancelButton: {
+    minWidth: 92,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "#CBD5E1",
+    backgroundColor: "#F8FAFC",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cancelButtonText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#334155",
   },
   buttonDisabled: {
     opacity: 0.7,
