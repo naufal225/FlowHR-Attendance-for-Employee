@@ -1,11 +1,17 @@
 import axios from "axios";
 import type {
+  MobileAttendanceCheckInPayload,
+  MobileAttendanceCheckInResponse,
+  MobileAttendanceCheckOutPayload,
+  MobileAttendanceCheckOutResponse,
   MobileAttendanceHistoryResponse,
   MobileAttendanceRecordStatus,
   MobileDashboardResponse,
   MobileLeavePageResponse,
   MobileLoginResponse,
   MobileMeResponse,
+  MobilePasswordUpdateResponse,
+  MobileProfileUpdateResponse,
 } from "../types/api";
 
 export const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? "";
@@ -16,6 +22,7 @@ type ApiErrorPayload = {
   error_code?: string;
   status_code?: number;
   errors?: Record<string, string[]>;
+  context?: Record<string, unknown>;
 };
 
 export type NormalizedApiError = {
@@ -23,6 +30,7 @@ export type NormalizedApiError = {
   code?: string;
   status?: number;
   errors?: Record<string, string[]>;
+  context?: Record<string, unknown>;
 };
 
 let accessToken: string | null = null;
@@ -85,6 +93,7 @@ export function normalizeApiError(error: unknown): NormalizedApiError {
       code: payload?.code ?? payload?.error_code,
       status,
       errors: payload?.errors,
+      context: payload?.context,
     };
   }
 
@@ -98,6 +107,33 @@ export function normalizeApiError(error: unknown): NormalizedApiError {
 export function isUnauthorizedError(error: unknown): boolean {
   const normalized = normalizeApiError(error);
   return normalized.status === 401;
+}
+
+export function resolveAssetUrl(path?: string | null): string | null {
+  if (!path || path.trim().length === 0) {
+    return null;
+  }
+
+  const trimmed = path.trim();
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed;
+  }
+
+  const normalizedBase = API_BASE_URL.trim();
+  if (!normalizedBase) {
+    return trimmed;
+  }
+
+  let base = normalizedBase;
+  if (base.endsWith("/api/mobile")) {
+    base = base.slice(0, -"/api/mobile".length);
+  } else if (base.endsWith("/api")) {
+    base = base.slice(0, -"/api".length);
+  }
+
+  base = base.replace(/\/$/, "");
+  const normalizedPath = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+  return `${base}${normalizedPath}`;
 }
 
 export const mobileAuthApi = {
@@ -138,6 +174,24 @@ export const mobileDashboardApi = {
 };
 
 export const mobileAttendanceApi = {
+  async checkIn(payload: MobileAttendanceCheckInPayload): Promise<MobileAttendanceCheckInResponse> {
+    ensureApiBaseUrl();
+    const response = await apiClient.post<MobileAttendanceCheckInResponse>(
+      "/attendance/check-in",
+      payload,
+    );
+    return response.data;
+  },
+
+  async checkOut(payload: MobileAttendanceCheckOutPayload): Promise<MobileAttendanceCheckOutResponse> {
+    ensureApiBaseUrl();
+    const response = await apiClient.post<MobileAttendanceCheckOutResponse>(
+      "/attendance/check-out",
+      payload,
+    );
+    return response.data;
+  },
+
   async fetchHistory(params?: {
     page?: number;
     perPage?: number;
@@ -184,6 +238,53 @@ export const mobileLeaveApi = {
       },
     });
 
+    return response.data;
+  },
+};
+
+export const mobileProfileApi = {
+  async updateProfile(params: {
+    name: string;
+    email: string;
+    profilePhoto?: {
+      uri: string;
+      name: string;
+      type: string;
+    } | null;
+  }): Promise<MobileProfileUpdateResponse> {
+    ensureApiBaseUrl();
+
+    const formData = new FormData();
+    formData.append("name", params.name);
+    formData.append("email", params.email);
+    if (params.profilePhoto) {
+      formData.append("profile_photo", {
+        uri: params.profilePhoto.uri,
+        name: params.profilePhoto.name,
+        type: params.profilePhoto.type,
+      } as any);
+    }
+
+    const response = await apiClient.post<MobileProfileUpdateResponse>("/profile", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    return response.data;
+  },
+
+  async updatePassword(params: {
+    currentPassword: string;
+    newPassword: string;
+    newPasswordConfirmation: string;
+  }): Promise<MobilePasswordUpdateResponse> {
+    ensureApiBaseUrl();
+    const response = await apiClient.put<MobilePasswordUpdateResponse>("/profile/password", {
+      current_password: params.currentPassword,
+      new_password: params.newPassword,
+      new_password_confirmation: params.newPasswordConfirmation,
+    });
     return response.data;
   },
 };

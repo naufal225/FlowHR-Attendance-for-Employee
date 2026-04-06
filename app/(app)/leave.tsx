@@ -46,7 +46,7 @@ type CalendarCell = {
   hasLeave: boolean;
 };
 
-const WEEKDAY_LABELS = ["S", "M", "T", "W", "T", "F", "S"];
+const WEEKDAY_LABELS = ["S", "S", "R", "K", "J", "S", "M"];
 
 const initialState: LeaveState = {
   data: null,
@@ -129,6 +129,13 @@ export default function LeaveScreen() {
       }),
     [displayMonth, leaveByDate, selectedDateKey, todayKey],
   );
+  const calendarRows = useMemo(() => {
+    const rows: CalendarCell[][] = [];
+    for (let index = 0; index < calendarCells.length; index += 7) {
+      rows.push(calendarCells.slice(index, index + 7));
+    }
+    return rows;
+  }, [calendarCells]);
 
   const selectedLeave = selectedDateKey ? (leaveByDate.get(selectedDateKey) ?? null) : null;
 
@@ -251,33 +258,43 @@ export default function LeaveScreen() {
           </View>
 
           <View style={styles.calendarGrid}>
-            {calendarCells.map((cell) => (
-              <Pressable
-                key={cell.key}
-                style={styles.dayCell}
-                onPress={() => setSelectedDateKey(cell.key)}
+            {calendarRows.map((row, rowIndex) => (
+              <View
+                key={`row-${rowIndex}`}
+                style={[
+                  styles.calendarRow,
+                  rowIndex < calendarRows.length - 1 && styles.calendarRowSpacing,
+                ]}
               >
-                <View
-                  style={[
-                    styles.dayNumberWrap,
-                    cell.isSelected && styles.dayNumberWrapSelected,
-                    !cell.isSelected && cell.isToday && styles.dayNumberWrapToday,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.dayNumberText,
-                      !cell.isCurrentMonth && styles.dayNumberTextMuted,
-                      cell.isSelected && styles.dayNumberTextSelected,
-                    ]}
+                {row.map((cell) => (
+                  <Pressable
+                    key={cell.key}
+                    style={styles.dayCell}
+                    onPress={() => setSelectedDateKey(cell.key)}
                   >
-                    {cell.day}
-                  </Text>
-                </View>
-                <View style={styles.dotSlot}>
-                  {cell.hasLeave ? <View style={styles.leaveDot} /> : null}
-                </View>
-              </Pressable>
+                    <View
+                      style={[
+                        styles.dayNumberWrap,
+                        cell.isSelected && styles.dayNumberWrapSelected,
+                        !cell.isSelected && cell.isToday && styles.dayNumberWrapToday,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.dayNumberText,
+                          !cell.isCurrentMonth && styles.dayNumberTextMuted,
+                          cell.isSelected && styles.dayNumberTextSelected,
+                        ]}
+                      >
+                        {cell.day}
+                      </Text>
+                    </View>
+                    <View style={styles.dotSlot}>
+                      {cell.hasLeave ? <View style={styles.leaveDot} /> : null}
+                    </View>
+                  </Pressable>
+                ))}
+              </View>
             ))}
           </View>
         </View>
@@ -309,6 +326,7 @@ export default function LeaveScreen() {
         activeTab="leave"
         navHeight={navHeight}
         navBottomPadding={navBottomPadding}
+        onPressProfile={() => router.replace("/(app)/profile")}
       />
     </View>
   );
@@ -491,12 +509,12 @@ function endOfMonth(date: Date): Date {
 }
 
 function startOfWeek(date: Date): Date {
-  const dayOfWeek = date.getDay();
+  const dayOfWeek = (date.getDay() + 6) % 7;
   return addDays(startOfDay(date), -dayOfWeek);
 }
 
 function endOfWeek(date: Date): Date {
-  const dayOfWeek = date.getDay();
+  const dayOfWeek = (date.getDay() + 6) % 7;
   return addDays(startOfDay(date), 6 - dayOfWeek);
 }
 
@@ -690,7 +708,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   weekdayLabel: {
-    width: `${100 / 7}%`,
+    flex: 1,
     textAlign: "center",
     ...typography.caption,
     fontSize: 11,
@@ -698,12 +716,17 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   calendarGrid: {
+    flexDirection: "column",
+  },
+  calendarRow: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    rowGap: 6,
+    alignItems: "center",
+  },
+  calendarRowSpacing: {
+    marginBottom: 6,
   },
   dayCell: {
-    width: `${100 / 7}%`,
+    flex: 1,
     alignItems: "center",
     justifyContent: "center",
     minHeight: 50,

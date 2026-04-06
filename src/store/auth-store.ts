@@ -17,6 +17,8 @@ type AuthStore = AuthSession & {
   login: (input: LoginInput) => Promise<void>;
   logout: () => Promise<void>;
   clearSession: () => Promise<void>;
+  refreshMe: () => Promise<void>;
+  setUser: (user: AuthSession["user"]) => void;
 };
 
 const initialSession: AuthSession = {
@@ -88,6 +90,30 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       isAuthenticated: true,
       isBootstrapping: false,
     });
+  },
+
+  refreshMe: async () => {
+    try {
+      const meResponse = await mobileAuthApi.fetchMe();
+      set((state) => ({
+        ...state,
+        user: meResponse.data,
+        isAuthenticated: true,
+      }));
+    } catch (error) {
+      if (isUnauthorizedError(error)) {
+        await get().clearSession();
+      }
+
+      throw error;
+    }
+  },
+
+  setUser: (user) => {
+    set((state) => ({
+      ...state,
+      user,
+    }));
   },
 
   logout: async () => {

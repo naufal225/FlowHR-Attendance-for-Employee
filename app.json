@@ -6,14 +6,19 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "FlowHR membutuhkan akses kamera untuk memindai QR kantor saat absensi.",
+        "NSLocationWhenInUseUsageDescription": "FlowHR membutuhkan akses lokasi untuk memvalidasi posisi Anda saat absensi.",
+        "NSPhotoLibraryUsageDescription": "FlowHR membutuhkan akses galeri untuk mengganti foto profil."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -21,7 +26,14 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_EXTERNAL_STORAGE"
+      ],
+      "package": "com.anonymous.flowhrmobileemployee"
     },
     "plugins": [
       "expo-router"

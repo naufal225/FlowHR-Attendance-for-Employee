@@ -44,6 +44,33 @@ const initialState: DashboardState = {
   errorMessage: null,
 };
 
+const EMPTY_LOCATION_READINESS = {
+  office_radius_meter: null,
+  min_location_accuracy_meter: null,
+  gps_required: true,
+  last_known_distance_meter: null,
+  last_known_accuracy_meter: null,
+  location_status: null,
+  location_reason: null,
+} as const;
+
+const EMPTY_ATTENDANCE_SUMMARY = {
+  record_status: null,
+  record_status_label: null,
+  check_in_status: null,
+  check_in_status_label: null,
+  check_out_status: null,
+  check_out_status_label: null,
+  late_minutes: null,
+  early_leave_minutes: null,
+  overtime_minutes: null,
+  notes: null,
+  avg_start: undefined,
+  this_week: undefined,
+  recent_activity: undefined,
+  insight: undefined,
+} as const;
+
 export default function DashboardScreen() {
   const insets = useSafeAreaInsets();
   const logout = useAuthStore((state) => state.logout);
@@ -150,14 +177,20 @@ export default function DashboardScreen() {
     );
   }
 
-  const {
-    user,
-    today_status,
-    action_state,
-    policy,
-    location_readiness,
-    attendance_summary,
-  } = state.data;
+  const user = state.data.user;
+  const today_status = state.data.today_status;
+  const policy = state.data.policy;
+  const location_readiness =
+    state.data.location_readiness && typeof state.data.location_readiness === "object"
+      ? state.data.location_readiness
+      : EMPTY_LOCATION_READINESS;
+  const attendance_summary =
+    state.data.attendance_summary && typeof state.data.attendance_summary === "object"
+      ? state.data.attendance_summary
+      : EMPTY_ATTENDANCE_SUMMARY;
+  const recent_attendances = Array.isArray(state.data.recent_attendances)
+    ? state.data.recent_attendances
+    : [];
 
   const hasCheckIn = Boolean(today_status.check_in_at);
   const hasCheckOut = Boolean(today_status.check_out_at);
@@ -185,6 +218,13 @@ export default function DashboardScreen() {
   const secondCardValue = locationReadinessView.zoneValue;
   const secondCardAccent = locationReadinessView.zoneAccent;
   const secondIconColor = secondCardAccent === "green" ? "#027A30" : "#6B7280";
+  const attendanceAction = isCheckedIn ? "check_out" : "check_in";
+  const handleOpenScanner = () => {
+    router.push({
+      pathname: "/attendance-scan",
+      params: { mode: attendanceAction },
+    });
+  };
 
   const ctaLabel = isCheckedIn
     ? "Pindai QR untuk Absen Pulang"
@@ -212,7 +252,7 @@ export default function DashboardScreen() {
         type: (activity.type ?? "clock_in") as "clock_in" | "clock_out",
         at: activity.at,
       }))
-    : buildRecentActivityFallback(state.data.recent_attendances);
+    : buildRecentActivityFallback(recent_attendances);
   const summaryInsightMessage = formatMinutePhrasesInText(
     attendance_summary.insight?.message
       ?? "Insight ringkasan akan muncul setelah data absensi Anda mencukupi.",
@@ -408,7 +448,10 @@ export default function DashboardScreen() {
               />
             </View>
             {isCheckedIn ? (
-              <Pressable style={[styles.ctaButton, ctaStyle]}>
+              <Pressable
+                style={[styles.ctaButton, ctaStyle]}
+                onPress={handleOpenScanner}
+              >
                 <MaterialCommunityIcons name="qrcode-scan" size={28} color="#FFFFFF" />
                 <Text style={styles.ctaText}>{ctaLabel}</Text>
               </Pressable>
@@ -416,7 +459,10 @@ export default function DashboardScreen() {
           </>
         ) : (
           <>
-            <Pressable style={[styles.ctaButton, ctaStyle]}>
+            <Pressable
+              style={[styles.ctaButton, ctaStyle]}
+              onPress={handleOpenScanner}
+            >
               <MaterialCommunityIcons name="qrcode-scan" size={28} color="#FFFFFF" />
               <Text style={styles.ctaText}>{ctaLabel}</Text>
             </Pressable>
@@ -592,6 +638,7 @@ export default function DashboardScreen() {
         activeTab="dashboard"
         navHeight={navHeight}
         navBottomPadding={navBottomPadding}
+        onPressProfile={() => router.replace("/(app)/profile")}
       />
     </View>
   );

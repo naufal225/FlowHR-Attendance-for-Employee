@@ -19,6 +19,7 @@ export type MobileUser = {
     address: string | null;
   };
   roles: string[];
+  url_profile?: string | null;
 };
 
 export type MobileLoginPayload = {
@@ -30,6 +31,8 @@ export type MobileLoginPayload = {
 export type MobileLoginResponse = ApiSuccessResponse<MobileLoginPayload>;
 
 export type MobileMeResponse = ApiSuccessResponse<MobileUser>;
+export type MobileProfileUpdateResponse = ApiSuccessResponse<MobileUser>;
+export type MobilePasswordUpdateResponse = ApiSuccessResponse<null>;
 
 export type MobileLocationStatus = "valid" | "invalid" | "suspicious";
 
@@ -143,6 +146,45 @@ export type MobileDashboardPayload = {
 export type MobileDashboardResponse = ApiSuccessResponse<MobileDashboardPayload>;
 
 export type MobileAttendanceRecordStatus = "ongoing" | "complete" | "incomplete";
+
+export type MobileAttendanceAction = "check_in" | "check_out";
+
+export type MobileAttendanceCheckInPayload = {
+  qr_token: string;
+  latitude: number;
+  longitude: number;
+  accuracy_meter: number | null;
+};
+
+export type MobileAttendanceCheckOutPayload = MobileAttendanceCheckInPayload;
+
+export type MobileAttendanceCheckInResult = {
+  id: number;
+  work_date: string;
+  check_in_at: string | null;
+  check_in_status: string | null;
+  late_minutes: number;
+  record_status: string | null;
+  is_suspicious: boolean;
+  suspicious_reason: string | null;
+};
+
+export type MobileAttendanceCheckOutResult = {
+  id: number;
+  work_date: string;
+  check_in_at: string | null;
+  check_out_at: string | null;
+  check_out_status: string | null;
+  early_leave_minutes: number;
+  overtime_minutes: number;
+  record_status: string | null;
+  is_suspicious: boolean;
+  suspicious_reason: string | null;
+};
+
+export type MobileAttendanceCheckInResponse = ApiSuccessResponse<MobileAttendanceCheckInResult>;
+
+export type MobileAttendanceCheckOutResponse = ApiSuccessResponse<MobileAttendanceCheckOutResult>;
 
 export type MobileCorrectionStatus = "pending" | "approved" | "rejected";
 

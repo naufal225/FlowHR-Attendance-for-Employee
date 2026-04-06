@@ -295,6 +295,7 @@ export default function HistoryScreen() {
         activeTab="history"
         navHeight={navHeight}
         navBottomPadding={navBottomPadding}
+        onPressProfile={() => router.replace("/(app)/profile")}
       />
     </View>
   );
