@@ -6,7 +6,6 @@ import {
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -77,7 +76,6 @@ export default function DashboardScreen() {
   const logout = useAuthStore((state) => state.logout);
   const [state, setState] = useState<DashboardState>(initialState);
   const [now, setNow] = useState(() => new Date());
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
@@ -124,12 +122,6 @@ export default function DashboardScreen() {
 
   const handleRefresh = async () => {
     await fetchDashboard("refresh");
-  };
-
-  const handleLogout = async () => {
-    setIsLoggingOut(true);
-    await logout();
-    setIsLoggingOut(false);
   };
 
   const checkInAt = state.data?.today_status.check_in_at ?? null;
@@ -323,23 +315,7 @@ export default function DashboardScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
-        <AppPageHeader
-          title="Dashboard"
-          topInset={0}
-          rightAccessory={(
-            <Pressable
-              onLongPress={() => void handleLogout()}
-              disabled={isLoggingOut}
-              style={styles.headerAvatarAction}
-            >
-              {isLoggingOut ? (
-                <ActivityIndicator color="#1868D5" />
-              ) : (
-                <Ionicons name="person" size={18} color="#16223A" />
-              )}
-            </Pressable>
-          )}
-        />
+        <AppPageHeader title="Dashboard" topInset={0} />
 
         {hasCheckedInToday ? (
           <View style={styles.checkedInMetaRow}>
@@ -1143,16 +1119,6 @@ const styles = StyleSheet.create({
   retryButtonText: {
     color: "#FFFFFF",
     fontWeight: "700",
-  },
-  headerAvatarAction: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: 2,
-    borderColor: "#C5D1E7",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#E9EEF7",
   },
   overviewBlock: {
     gap: spacing.s8,

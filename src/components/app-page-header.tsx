@@ -37,12 +37,12 @@ export function AppPageHeader({
           surface === "none" && styles.barNoPadding,
         ]}
       >
-        <View style={styles.sideSlot}>
+        {/* <View style={styles.sideSlot}>
           {leftAccessory ?? <View style={styles.accessoryPlaceholder} />}
-        </View>
+        </View> */}
 
         <View style={styles.center}>
-          <View style={[styles.logoWrap, isInverse && styles.logoWrapInverse]}>
+          <View style={styles.logoWrap}>
             <Image source={FLOWHR_LOGO} style={styles.logoImage} resizeMode="contain" />
           </View>
 
@@ -105,20 +105,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   logoWrap: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    backgroundColor: "#E8EEF8",
+    width: 80,
+    height: 48,
     alignItems: "center",
     justifyContent: "center",
-    overflow: "hidden",
-  },
-  logoWrapInverse: {
-    backgroundColor: "rgba(234, 241, 255, 0.16)",
   },
   logoImage: {
-    width: 30,
-    height: 30,
+    width: 80,
+    height: 44,
   },
   titleWrap: {
     gap: 2,
