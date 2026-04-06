@@ -25,8 +25,6 @@ import { useAuthStore } from "../../src/store/auth-store";
 import type { DashboardState } from "../../src/types/state";
 import {
   formatDurationFromMinutes,
-  formatMinutePhrasesInText,
-  formatSignedDurationFromMinutes,
 } from "../../src/utils/duration";
 import { buildLocationReadinessViewModel } from "../../src/utils/location-readiness";
 import { spacing, typography } from "../../src/theme/typography";
@@ -286,9 +284,6 @@ export default function DashboardScreen() {
     : isCheckedOut
       ? "SUDAH CHECK-OUT"
       : "BELUM ABSEN";
-  const summaryAvgStart = attendance_summary.avg_start?.time ?? "--:--";
-  const summaryAvgDeltaMinutes = attendance_summary.avg_start?.delta_from_shift_start_minutes ?? null;
-  const summaryWeekHours = attendance_summary.this_week?.total_hours ?? 0;
   const summaryRecentActivity = attendance_summary.recent_activity?.length
     ? attendance_summary.recent_activity.slice(0, 2).map((activity) => ({
         label: activity.label ?? "-",
@@ -297,11 +292,6 @@ export default function DashboardScreen() {
         at: activity.at,
       }))
     : buildRecentActivityFallback(recent_attendances);
-  const summaryInsightMessage = formatMinutePhrasesInText(
-    attendance_summary.insight?.message
-      ?? "Insight ringkasan akan muncul setelah data absensi Anda mencukupi.",
-  );
-  const summaryInsightType = attendance_summary.insight?.type ?? "neutral";
 
   return (
     <View style={styles.screen}>
@@ -545,43 +535,7 @@ export default function DashboardScreen() {
         ) : null}
 
         <View style={styles.attendanceSummaryCard}>
-          <Text style={styles.attendanceSummaryTitle}>Ringkasan Absensi</Text>
-
-          <View style={styles.attendanceSummaryStatRow}>
-            <View style={styles.attendanceSummaryStatBox}>
-              <Text style={styles.attendanceSummaryStatLabel}>RATA-RATA MASUK</Text>
-              <View style={styles.attendanceSummaryStatValueRow}>
-                <Text style={styles.attendanceSummaryStatValue}>{summaryAvgStart}</Text>
-                {summaryAvgDeltaMinutes !== null ? (
-                  <Text
-                    style={[
-                      styles.attendanceSummaryDelta,
-                      summaryAvgDeltaMinutes <= 0
-                        ? styles.attendanceSummaryDeltaGood
-                        : styles.attendanceSummaryDeltaWarn,
-                    ]}
-                  >
-                    {formatDeltaMinutes(summaryAvgDeltaMinutes)}
-                  </Text>
-                ) : null}
-              </View>
-            </View>
-
-            <View style={styles.attendanceSummaryStatBox}>
-              <Text style={styles.attendanceSummaryStatLabel}>MINGGU INI</Text>
-              <View style={styles.attendanceSummaryStatValueRow}>
-                <Text style={styles.attendanceSummaryStatValue}>
-                  {formatWeekHours(summaryWeekHours)}
-                </Text>
-                <Text style={styles.attendanceSummaryHoursSuffix}>JAM</Text>
-              </View>
-            </View>
-          </View>
-
-          <View style={styles.attendanceSummaryRecentHeader}>
-            <Text style={styles.attendanceSummaryRecentTitle}>AKTIVITAS TERBARU</Text>
-            <Text style={styles.attendanceSummaryRecentLink}>Lihat History</Text>
-          </View>
+          <Text style={styles.attendanceSummaryTitle}>Aktivitas Terbaru</Text>
 
           {summaryRecentActivity.length > 0 ? (
             <View style={styles.attendanceSummaryActivityList}>
@@ -609,22 +563,6 @@ export default function DashboardScreen() {
               Aktivitas absensi terbaru belum tersedia.
             </Text>
           )}
-
-          <View
-            style={[
-              styles.attendanceInsightBanner,
-              summaryInsightType === "ahead"
-                ? styles.attendanceInsightAhead
-                : summaryInsightType === "behind"
-                  ? styles.attendanceInsightBehind
-                  : styles.attendanceInsightNeutral,
-            ]}
-          >
-            <View style={styles.attendanceInsightIconCircle}>
-              <Ionicons name="bulb" size={16} color="#7A5A00" />
-            </View>
-            <Text style={styles.attendanceInsightText}>{summaryInsightMessage}</Text>
-          </View>
         </View>
 
         <View style={[styles.policyCard, isLate && styles.policyCardLate]}>
@@ -767,15 +705,6 @@ function resolveRelativeDayLabel(workDate: string | null): string {
     month: "short",
     day: "numeric",
   });
-}
-
-function formatDeltaMinutes(value: number): string {
-  return `(${formatSignedDurationFromMinutes(value)})`;
-}
-
-function formatWeekHours(value: number): string {
-  const safeValue = Number.isFinite(value) ? value : 0;
-  return safeValue.toFixed(1);
 }
 
 function parsePolicyTime(time: string | null, anchor: Date): Date | null {
@@ -1501,73 +1430,6 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: "#161E2B",
   },
-  attendanceSummaryStatRow: {
-    flexDirection: "row",
-    gap: spacing.s8,
-  },
-  attendanceSummaryStatBox: {
-    flex: 1,
-    borderRadius: 16,
-    backgroundColor: "#E4E6EB",
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    minHeight: 80,
-    justifyContent: "center",
-    gap: spacing.s6,
-  },
-  attendanceSummaryStatLabel: {
-    color: "#8A919E",
-    ...typography.labelCaps,
-    fontSize: 11,
-    fontWeight: "800",
-  },
-  attendanceSummaryStatValueRow: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    gap: spacing.s6,
-    flexWrap: "wrap",
-  },
-  attendanceSummaryStatValue: {
-    color: "#111827",
-    ...typography.titleCard,
-    fontSize: 26,
-    lineHeight: 30,
-    fontWeight: "900",
-    letterSpacing: -0.3,
-  },
-  attendanceSummaryDelta: {
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  attendanceSummaryDeltaGood: {
-    color: "#14803C",
-  },
-  attendanceSummaryDeltaWarn: {
-    color: "#B45309",
-  },
-  attendanceSummaryHoursSuffix: {
-    color: "#4B5563",
-    ...typography.labelCaps,
-    fontSize: 11,
-    fontWeight: "800",
-  },
-  attendanceSummaryRecentHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  attendanceSummaryRecentTitle: {
-    color: "#8A919E",
-    ...typography.labelCaps,
-    fontSize: 11,
-    fontWeight: "800",
-  },
-  attendanceSummaryRecentLink: {
-    color: "#1D64D7",
-    ...typography.caption,
-    fontSize: 12,
-    fontWeight: "700",
-  },
   attendanceSummaryActivityList: {
     gap: spacing.s8,
   },
@@ -1614,39 +1476,6 @@ const styles = StyleSheet.create({
     ...typography.body,
     fontSize: 13,
     lineHeight: 19,
-  },
-  attendanceInsightBanner: {
-    borderRadius: 18,
-    paddingHorizontal: 12,
-    paddingVertical: 11,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.s8,
-  },
-  attendanceInsightAhead: {
-    backgroundColor: "#F5D98F",
-  },
-  attendanceInsightBehind: {
-    backgroundColor: "#FDE1B3",
-  },
-  attendanceInsightNeutral: {
-    backgroundColor: "#E8DCC0",
-  },
-  attendanceInsightIconCircle: {
-    width: 30,
-    height: 30,
-    borderRadius: 999,
-    backgroundColor: "#A98300",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  attendanceInsightText: {
-    flex: 1,
-    color: "#6B4F00",
-    ...typography.body,
-    fontSize: 13,
-    lineHeight: 19,
-    fontWeight: "600",
   },
   policyCard: {
     borderRadius: 16,

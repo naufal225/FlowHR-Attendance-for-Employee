@@ -113,6 +113,7 @@ const styles = StyleSheet.create({
   logoImage: {
     width: 80,
     height: 44,
+    borderRadius: 20
   },
   titleWrap: {
     gap: 2,
