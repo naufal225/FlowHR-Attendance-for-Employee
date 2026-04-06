@@ -1,4 +1,4 @@
-import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useShallow } from "zustand/react/shallow";
+import { AppPageHeader } from "../../src/components/app-page-header";
 import { BottomNavbar } from "../../src/components/bottom-navbar";
 import {
   mobileProfileApi,
@@ -306,6 +307,8 @@ export default function ProfileScreen() {
           ]}
           showsVerticalScrollIndicator={false}
         >
+          <AppPageHeader title="Profile" topInset={0} />
+
           <View style={styles.skeletonProfileCard}>
             <View style={styles.skeletonAvatar} />
             <View style={[styles.skeletonLine, styles.skeletonNameLine]} />
@@ -360,15 +363,7 @@ export default function ProfileScreen() {
           { paddingTop: scrollTopPadding, paddingBottom: scrollBottomPadding },
         ]}
       >
-        <View style={styles.topBar}>
-          <Pressable style={styles.iconButton} hitSlop={8}>
-            <Feather name="menu" size={22} color="#1F2937" />
-          </Pressable>
-          <Text style={styles.topTitle}>Profile</Text>
-          <Pressable style={styles.iconButton} hitSlop={8}>
-            <Feather name="settings" size={22} color="#1F2937" />
-          </Pressable>
-        </View>
+        <AppPageHeader title="Profile" topInset={0} />
 
         {notice ? (
           <View
@@ -646,28 +641,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 16,
     gap: 18,
-  },
-  topBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  iconButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: "#F8FAFC",
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#0F172A",
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
-  topTitle: {
-    ...typography.titlePage,
-    color: "#111827",
   },
   noticeCard: {
     borderRadius: 16,

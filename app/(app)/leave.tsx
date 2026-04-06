@@ -5,7 +5,6 @@ import {
 import { router } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -19,6 +18,7 @@ import {
   mobileLeaveApi,
   normalizeApiError,
 } from "../../src/lib/api";
+import { AppPageHeader } from "../../src/components/app-page-header";
 import { BottomNavbar } from "../../src/components/bottom-navbar";
 import { useAuthStore } from "../../src/store/auth-store";
 import { spacing, typography } from "../../src/theme/typography";
@@ -47,6 +47,8 @@ type CalendarCell = {
 };
 
 const WEEKDAY_LABELS = ["S", "S", "R", "K", "J", "S", "M"];
+const SKELETON_WEEK_COLUMNS = Array.from({ length: 7 });
+const SKELETON_CALENDAR_ROWS = Array.from({ length: 6 });
 
 const initialState: LeaveState = {
   data: null,
@@ -141,33 +143,105 @@ export default function LeaveScreen() {
 
   if (state.isLoading && !state.data) {
     return (
-      <View
-        style={[
-          styles.centered,
-          { paddingTop: 24 + insets.top, paddingBottom: 24 + insets.bottom },
-        ]}
-      >
-        <ActivityIndicator size="large" color="#1D64D7" />
-        <Text style={styles.loadingText}>Memuat data cuti...</Text>
+      <View style={styles.screen}>
+        <ScrollView
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingTop: screenTopPadding, paddingBottom: navHeight + 26 },
+          ]}
+          showsVerticalScrollIndicator={false}
+        >
+          <AppPageHeader title="Cuti" topInset={0} />
+
+          <View style={styles.skeletonTodayCard}>
+            <View style={[styles.skeletonLine, styles.skeletonTodayLabel]} />
+
+            <View style={styles.skeletonTodayBody}>
+              <View style={[styles.skeletonLine, styles.skeletonTodayTitle]} />
+              <View style={styles.skeletonTodayIcon} />
+            </View>
+
+            <View style={styles.skeletonTodayFooter}>
+              <View style={[styles.skeletonLine, styles.skeletonTodayMetaShort]} />
+              <View style={[styles.skeletonLine, styles.skeletonTodayMetaLong]} />
+            </View>
+          </View>
+
+          <View style={styles.skeletonCalendarCard}>
+            <View style={styles.skeletonCalendarHeader}>
+              <View style={[styles.skeletonLine, styles.skeletonCalendarMonth]} />
+              <View style={styles.skeletonCalendarNavRow}>
+                <View style={styles.skeletonCalendarNav} />
+                <View style={styles.skeletonCalendarNav} />
+              </View>
+            </View>
+
+            <View style={styles.skeletonWeekdayRow}>
+              {SKELETON_WEEK_COLUMNS.map((_, index) => (
+                <View key={`weekday-${index}`} style={styles.skeletonWeekdayDot} />
+              ))}
+            </View>
+
+            <View style={styles.skeletonCalendarGrid}>
+              {SKELETON_CALENDAR_ROWS.map((_, rowIndex) => (
+                <View
+                  key={`row-${rowIndex}`}
+                  style={[
+                    styles.skeletonCalendarRow,
+                    rowIndex < SKELETON_CALENDAR_ROWS.length - 1 && styles.skeletonCalendarRowSpacing,
+                  ]}
+                >
+                  {SKELETON_WEEK_COLUMNS.map((_, colIndex) => (
+                    <View key={`cell-${rowIndex}-${colIndex}`} style={styles.skeletonCalendarCell}>
+                      <View style={styles.skeletonCalendarPill} />
+                    </View>
+                  ))}
+                </View>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.skeletonBottomRow}>
+            <View style={styles.skeletonBottomItem}>
+              <View style={styles.skeletonBottomDot} />
+              <View style={[styles.skeletonLine, styles.skeletonBottomLabel]} />
+            </View>
+            <View style={styles.skeletonBottomItem}>
+              <View style={styles.skeletonBottomDot} />
+              <View style={[styles.skeletonLine, styles.skeletonBottomLabel]} />
+            </View>
+            <View style={styles.skeletonBottomItem}>
+              <View style={styles.skeletonBottomDot} />
+              <View style={[styles.skeletonLine, styles.skeletonBottomLabel]} />
+            </View>
+          </View>
+        </ScrollView>
       </View>
     );
   }
 
   if (!state.data) {
     return (
-      <View
-        style={[
-          styles.centered,
-          { paddingTop: 24 + insets.top, paddingBottom: 24 + insets.bottom },
-        ]}
-      >
-        <Text style={styles.errorTitle}>Halaman cuti gagal dimuat.</Text>
-        <Text style={styles.errorMessage}>
-          {state.errorMessage ?? "Terjadi kesalahan yang tidak diketahui."}
-        </Text>
-        <Pressable style={styles.retryButton} onPress={() => void fetchLeavePage()}>
-          <Text style={styles.retryButtonText}>Coba lagi</Text>
-        </Pressable>
+      <View style={styles.screen}>
+        <ScrollView
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingTop: screenTopPadding, paddingBottom: navHeight + 26 },
+          ]}
+          showsVerticalScrollIndicator={false}
+        >
+          <AppPageHeader title="Cuti" topInset={0} />
+
+          <View style={styles.stateCard}>
+            <Text style={styles.errorTitle}>Halaman cuti gagal dimuat.</Text>
+            <Text style={styles.errorMessage}>
+              {state.errorMessage ?? "Terjadi kesalahan yang tidak diketahui."}
+            </Text>
+            <Pressable style={styles.retryButton} onPress={() => void fetchLeavePage()}>
+              <Text style={styles.retryButtonText}>Coba lagi</Text>
+            </Pressable>
+          </View>
+        </ScrollView>
       </View>
     );
   }
@@ -195,13 +269,7 @@ export default function LeaveScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.headerRow}>
-          <Pressable style={styles.menuButton} hitSlop={8}>
-            <Feather name="menu" size={26} color="#121620" />
-          </Pressable>
-          <Text style={styles.headerTitle}>Cuti</Text>
-          <View style={styles.menuButtonSpacer} />
-        </View>
+        <AppPageHeader title="Cuti" topInset={0} />
 
         <View style={isOnLeaveToday ? styles.todayCardLeave : styles.todayCardWorking}>
           <View style={isOnLeaveToday ? styles.todayIconWrapLeave : styles.todayIconWrapWorking}>
@@ -544,17 +612,139 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     gap: spacing.s16,
   },
-  centered: {
+  stateCard: {
+    borderRadius: 18,
+    backgroundColor: "#F7F8FA",
+    paddingHorizontal: 18,
+    paddingVertical: 18,
+    alignItems: "center",
+    gap: spacing.s8,
+  },
+  skeletonTodayCard: {
+    borderRadius: 18,
+    backgroundColor: "#F0F2F5",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    gap: 12,
+  },
+  skeletonLine: {
+    backgroundColor: "#E1E5EA",
+    borderRadius: 999,
+  },
+  skeletonTodayLabel: {
+    width: 64,
+    height: 10,
+  },
+  skeletonTodayBody: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.s12,
+  },
+  skeletonTodayTitle: {
+    flex: 1,
+    height: 28,
+    maxWidth: 180,
+  },
+  skeletonTodayIcon: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: "#E1E5EA",
+  },
+  skeletonTodayFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  skeletonTodayMetaShort: {
+    width: 56,
+    height: 12,
+  },
+  skeletonTodayMetaLong: {
+    width: 56,
+    height: 12,
+  },
+  skeletonCalendarCard: {
+    borderRadius: 22,
+    backgroundColor: "#F0F2F5",
+    padding: 16,
+    gap: spacing.s12,
+  },
+  skeletonCalendarHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  skeletonCalendarMonth: {
+    width: 90,
+    height: 12,
+  },
+  skeletonCalendarNavRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  skeletonCalendarNav: {
+    width: 20,
+    height: 20,
+    borderRadius: 999,
+    backgroundColor: "#E1E5EA",
+  },
+  skeletonWeekdayRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 6,
+  },
+  skeletonWeekdayDot: {
+    flex: 1,
+    height: 8,
+    borderRadius: 999,
+    backgroundColor: "#E1E5EA",
+  },
+  skeletonCalendarGrid: {
+    flexDirection: "column",
+  },
+  skeletonCalendarRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  skeletonCalendarRowSpacing: {
+    marginBottom: 8,
+  },
+  skeletonCalendarCell: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 24,
-    gap: spacing.s12,
-    backgroundColor: "#EEF0F3",
   },
-  loadingText: {
-    fontSize: 14,
-    color: "#394355",
+  skeletonCalendarPill: {
+    width: 20,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: "#E1E5EA",
+  },
+  skeletonBottomRow: {
+    marginTop: 4,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-around",
+    paddingHorizontal: 12,
+  },
+  skeletonBottomItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  skeletonBottomDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 999,
+    backgroundColor: "#E1E5EA",
+  },
+  skeletonBottomLabel: {
+    width: 42,
+    height: 7,
   },
   errorTitle: {
     fontSize: 18,
@@ -578,27 +768,6 @@ const styles = StyleSheet.create({
   retryButtonText: {
     color: "#FFFFFF",
     fontWeight: "700",
-  },
-  headerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  menuButton: {
-    width: 36,
-    height: 36,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  menuButtonSpacer: {
-    width: 36,
-    height: 36,
-  },
-  headerTitle: {
-    ...typography.titlePage,
-    fontSize: 24,
-    lineHeight: 28,
-    color: "#0E1522",
   },
   todayCardLeave: {
     borderRadius: 22,

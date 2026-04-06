@@ -15,6 +15,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { AppPageHeader } from "../../src/components/app-page-header";
 import { BottomNavbar } from "../../src/components/bottom-navbar";
 import {
   isUnauthorizedError,
@@ -146,33 +147,84 @@ export default function DashboardScreen() {
 
   if (state.isLoading) {
     return (
-      <View
-        style={[
-          styles.centered,
-          { paddingTop: 24 + insets.top, paddingBottom: 24 + insets.bottom },
-        ]}
-      >
-        <ActivityIndicator size="large" color="#1868D5" />
-        <Text style={styles.loadingText}>Memuat dashboard absensi...</Text>
+      <View style={styles.screen}>
+        <ScrollView
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingTop: scrollTopPadding, paddingBottom: scrollBottomPadding },
+          ]}
+          showsVerticalScrollIndicator={false}
+        >
+          <AppPageHeader title="Dashboard" topInset={0} />
+
+          <View style={styles.skeletonMainCard}>
+            <View style={styles.skeletonMainTopRow}>
+              <View style={[styles.skeletonLine, styles.skeletonMainTag]} />
+              <View style={styles.skeletonMainSmallCircle} />
+            </View>
+
+            <View style={[styles.skeletonLine, styles.skeletonMainTitle]} />
+
+            <View style={styles.skeletonMainMiddleRow}>
+              <View style={[styles.skeletonLine, styles.skeletonMainMiddleLine]} />
+              <View style={styles.skeletonMainCircle} />
+            </View>
+
+            <View style={styles.skeletonMainBottomRow}>
+              <View style={[styles.skeletonLine, styles.skeletonMainBottomShort]} />
+              <View style={[styles.skeletonLine, styles.skeletonMainBottomLong]} />
+            </View>
+          </View>
+
+          <View style={styles.skeletonDuoCardsRow}>
+            <View style={styles.skeletonInfoCard}>
+              <View style={[styles.skeletonLine, styles.skeletonInfoTop]} />
+              <View style={[styles.skeletonLine, styles.skeletonInfoMid]} />
+              <View style={[styles.skeletonLine, styles.skeletonInfoBottom]} />
+            </View>
+
+            <View style={styles.skeletonInfoCard}>
+              <View style={[styles.skeletonLine, styles.skeletonInfoTop]} />
+              <View style={[styles.skeletonLine, styles.skeletonInfoMid]} />
+              <View style={[styles.skeletonLine, styles.skeletonInfoBottom]} />
+            </View>
+          </View>
+
+          <View style={styles.skeletonListCard}>
+            <View style={styles.skeletonListIcon} />
+            <View style={styles.skeletonListTextWrap}>
+              <View style={[styles.skeletonLine, styles.skeletonListLinePrimary]} />
+              <View style={[styles.skeletonLine, styles.skeletonListLineSecondary]} />
+            </View>
+            <View style={styles.skeletonListDot} />
+          </View>
+        </ScrollView>
       </View>
     );
   }
 
   if (!state.data) {
     return (
-      <View
-        style={[
-          styles.centered,
-          { paddingTop: 24 + insets.top, paddingBottom: 24 + insets.bottom },
-        ]}
-      >
-        <Text style={styles.errorTitle}>Dashboard gagal dimuat</Text>
-        <Text style={styles.errorDescription}>
-          {state.errorMessage ?? "Terjadi kesalahan yang tidak diketahui."}
-        </Text>
-        <Pressable style={styles.retryButton} onPress={() => void fetchDashboard()}>
-          <Text style={styles.retryButtonText}>Coba lagi</Text>
-        </Pressable>
+      <View style={styles.screen}>
+        <ScrollView
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingTop: scrollTopPadding, paddingBottom: scrollBottomPadding },
+          ]}
+          showsVerticalScrollIndicator={false}
+        >
+          <AppPageHeader title="Dashboard" topInset={0} />
+
+          <View style={styles.stateCard}>
+            <Text style={styles.errorTitle}>Dashboard gagal dimuat</Text>
+            <Text style={styles.errorDescription}>
+              {state.errorMessage ?? "Terjadi kesalahan yang tidak diketahui."}
+            </Text>
+            <Pressable style={styles.retryButton} onPress={() => void fetchDashboard()}>
+              <Text style={styles.retryButtonText}>Coba lagi</Text>
+            </Pressable>
+          </View>
+        </ScrollView>
       </View>
     );
   }
@@ -271,36 +323,23 @@ export default function DashboardScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.topHeader}>
-          {hasCheckedInToday ? (
-            <>
-              <View style={styles.profileHeaderLeft}>
-                <View style={styles.avatarCircle}>
-                  <Ionicons name="person" size={22} color="#16223A" />
-                </View>
-                <Text style={styles.appTitle}>FlowHR</Text>
-              </View>
-              <Pressable hitSlop={8}>
-                <Ionicons name="notifications" size={24} color="#6F7787" />
-              </Pressable>
-            </>
-          ) : (
-            <>
-              <Text style={styles.appTitle}>FlowHR</Text>
-              <Pressable
-                onLongPress={() => void handleLogout()}
-                disabled={isLoggingOut}
-                style={styles.avatarCircle}
-              >
-                {isLoggingOut ? (
-                  <ActivityIndicator color="#1868D5" />
-                ) : (
-                  <Ionicons name="person" size={22} color="#16223A" />
-                )}
-              </Pressable>
-            </>
+        <AppPageHeader
+          title="Dashboard"
+          topInset={0}
+          rightAccessory={(
+            <Pressable
+              onLongPress={() => void handleLogout()}
+              disabled={isLoggingOut}
+              style={styles.headerAvatarAction}
+            >
+              {isLoggingOut ? (
+                <ActivityIndicator color="#1868D5" />
+              ) : (
+                <Ionicons name="person" size={18} color="#16223A" />
+              )}
+            </Pressable>
           )}
-        </View>
+        />
 
         {hasCheckedInToday ? (
           <View style={styles.checkedInMetaRow}>
@@ -957,17 +996,133 @@ const styles = StyleSheet.create({
     paddingBottom: 132,
     gap: spacing.s16,
   },
-  centered: {
-    flex: 1,
+  stateCard: {
+    borderRadius: 18,
+    backgroundColor: "#F7F8FA",
+    paddingHorizontal: 18,
+    paddingVertical: 18,
     alignItems: "center",
-    justifyContent: "center",
-    padding: 24,
-    gap: spacing.s12,
-    backgroundColor: "#EEF0F3",
+    gap: spacing.s8,
   },
-  loadingText: {
-    fontSize: 14,
-    color: "#374151",
+  skeletonLine: {
+    borderRadius: 999,
+    backgroundColor: "#E2E5EA",
+  },
+  skeletonMainCard: {
+    borderRadius: 22,
+    backgroundColor: "#F4F6F8",
+    padding: 16,
+    gap: spacing.s12,
+  },
+  skeletonMainTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  skeletonMainTag: {
+    width: 56,
+    height: 10,
+  },
+  skeletonMainSmallCircle: {
+    width: 34,
+    height: 34,
+    borderRadius: 999,
+    backgroundColor: "#E2E5EA",
+  },
+  skeletonMainTitle: {
+    width: "54%",
+    height: 34,
+    borderRadius: 10,
+  },
+  skeletonMainMiddleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.s12,
+  },
+  skeletonMainMiddleLine: {
+    flex: 1,
+    height: 38,
+    borderRadius: 12,
+  },
+  skeletonMainCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 999,
+    backgroundColor: "#E2E5EA",
+  },
+  skeletonMainBottomRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  skeletonMainBottomShort: {
+    width: 96,
+    height: 20,
+    borderRadius: 8,
+  },
+  skeletonMainBottomLong: {
+    flex: 1,
+    height: 20,
+    borderRadius: 8,
+  },
+  skeletonDuoCardsRow: {
+    flexDirection: "row",
+    gap: spacing.s12,
+  },
+  skeletonInfoCard: {
+    flex: 1,
+    borderRadius: 16,
+    backgroundColor: "#F4F6F8",
+    minHeight: 102,
+    padding: 14,
+    gap: 10,
+  },
+  skeletonInfoTop: {
+    width: 44,
+    height: 10,
+  },
+  skeletonInfoMid: {
+    width: "72%",
+    height: 28,
+    borderRadius: 10,
+  },
+  skeletonInfoBottom: {
+    width: "84%",
+    height: 12,
+  },
+  skeletonListCard: {
+    borderRadius: 14,
+    backgroundColor: "#F0F2F5",
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.s12,
+  },
+  skeletonListIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    backgroundColor: "#E2E5EA",
+  },
+  skeletonListTextWrap: {
+    flex: 1,
+    gap: 8,
+  },
+  skeletonListLinePrimary: {
+    width: "74%",
+    height: 10,
+  },
+  skeletonListLineSecondary: {
+    width: "52%",
+    height: 8,
+  },
+  skeletonListDot: {
+    width: 18,
+    height: 18,
+    borderRadius: 999,
+    backgroundColor: "#E2E5EA",
   },
   errorTitle: {
     fontSize: 18,
@@ -989,27 +1144,10 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontWeight: "700",
   },
-  topHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  profileHeaderLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.s12,
-  },
-  appTitle: {
-    ...typography.titleCard,
-    fontSize: 19,
-    lineHeight: 23,
-    fontWeight: "700",
-    color: "#0E1422",
-  },
-  avatarCircle: {
-    width: 46,
-    height: 46,
-    borderRadius: 999,
+  headerAvatarAction: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     borderWidth: 2,
     borderColor: "#C5D1E7",
     alignItems: "center",

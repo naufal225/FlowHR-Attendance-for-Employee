@@ -24,6 +24,7 @@ import {
   mobileAttendanceApi,
   normalizeApiError,
 } from "../../src/lib/api";
+import { AppPageHeader } from "../../src/components/app-page-header";
 import { BottomNavbar } from "../../src/components/bottom-navbar";
 import { useAuthStore } from "../../src/store/auth-store";
 import type {
@@ -184,17 +185,7 @@ export default function HistoryScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.headerRow}>
-          <View style={styles.headerLeft}>
-            <View style={styles.avatarCircle}>
-              <Ionicons name="person" size={18} color="#132440" />
-            </View>
-            <Text style={styles.headerTitle}>History Absensi</Text>
-          </View>
-          <Pressable style={styles.iconButton} hitSlop={8}>
-            <Ionicons name="options-outline" size={22} color="#5D6B82" />
-          </Pressable>
-        </View>
+        <AppPageHeader title="History Absensi" topInset={0} />
 
         <ScrollView
           horizontal
@@ -660,40 +651,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 18,
     gap: 14,
-  },
-  headerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 2,
-  },
-  headerLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  avatarCircle: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    borderWidth: 2,
-    borderColor: "#C7D6EB",
-    backgroundColor: "#1C2D46",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  headerTitle: {
-    fontSize: 18,
-    color: "#195FD1",
-    fontWeight: "800",
-    letterSpacing: -0.2,
-  },
-  iconButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
   },
   filterRow: {
     flexDirection: "row",

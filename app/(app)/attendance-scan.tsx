@@ -5,6 +5,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { AppPageHeader } from "../../src/components/app-page-header";
 import { AttendanceProcessingOverlay } from "../../src/components/attendance/attendance-processing-overlay";
 import { AttendanceResultView } from "../../src/components/attendance/attendance-result-view";
 import { PermissionStateView } from "../../src/components/attendance/permission-state-view";
@@ -33,7 +34,6 @@ import type {
   AttendanceScanPhase,
 } from "../../src/types/attendance-scan";
 import {
-  getActionTitle,
   getInstructionLabel,
   getProcessingCopy,
   getReadyLabel,
@@ -253,38 +253,34 @@ export default function AttendanceScanScreen() {
 
   const scannerActive = isFocused && phase === "scanning";
   const processingCopy = getProcessingCopy(phase);
-  const actionTitle = getActionTitle(action);
+  const isScannerVisualPhase = phase === "scanning"
+    || phase === "qr-detected"
+    || phase === "getting-location"
+    || phase === "submitting";
 
   return (
     <View style={styles.screen}>
-      <View style={[styles.header, { paddingTop: insets.top + spacing.s8 }]}>
-        <Pressable
-          onPress={handleBackToDashboard}
-          style={[
-            styles.headerIconButton,
-            phase !== "scanning" && styles.headerIconButtonLight,
-          ]}
-        >
-          <Ionicons
-            name="arrow-back"
-            size={26}
-            color={phase === "scanning" ? "#FFFFFF" : "#394152"}
-          />
-        </Pressable>
-
-        <Text
-          style={[
-            styles.headerTitle,
-            phase === "scanning" && styles.headerTitleOnScanner,
-          ]}
-        >
-          {actionTitle}
-        </Text>
-
-        <View style={styles.profileAvatar}>
-          <Ionicons name="person" size={18} color="#102037" />
-        </View>
-      </View>
+      <AppPageHeader
+        title="Scan Absensi"
+        topInset={insets.top}
+        tone={isScannerVisualPhase ? "inverse" : "default"}
+        surface={isScannerVisualPhase ? "dark" : "light"}
+        leftAccessory={(
+          <Pressable
+            onPress={handleBackToDashboard}
+            style={[
+              styles.backButton,
+              isScannerVisualPhase ? styles.backButtonOnScanner : styles.backButtonOnSurface,
+            ]}
+          >
+            <Ionicons
+              name="arrow-back"
+              size={20}
+              color={isScannerVisualPhase ? "#FFFFFF" : "#334155"}
+            />
+          </Pressable>
+        )}
+      />
 
       {phase === "scanning"
       || phase === "qr-detected"
@@ -532,41 +528,20 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#EDEFF3",
   },
-  header: {
-    zIndex: 10,
-    paddingHorizontal: 16,
-    paddingBottom: spacing.s12,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  headerIconButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(0,0,0,0.2)",
-  },
-  headerIconButtonLight: {
-    backgroundColor: "#E5E9F1",
-  },
-  headerTitle: {
-    ...typography.titleCard,
-    color: "#131B2A",
-  },
-  headerTitleOnScanner: {
-    color: "#FFFFFF",
-  },
-  profileAvatar: {
-    width: 40,
-    height: 40,
+  backButton: {
+    width: 36,
+    height: 36,
     borderRadius: 999,
-    borderWidth: 1,
-    borderColor: "#AEC0DF",
-    backgroundColor: "#E6ECF7",
     alignItems: "center",
     justifyContent: "center",
+  },
+  backButtonOnScanner: {
+    backgroundColor: "rgba(11, 20, 36, 0.45)",
+  },
+  backButtonOnSurface: {
+    backgroundColor: "#E8EDF5",
+    borderWidth: 1,
+    borderColor: "#CFD8E7",
   },
   scannerContainer: {
     ...StyleSheet.absoluteFillObject,
