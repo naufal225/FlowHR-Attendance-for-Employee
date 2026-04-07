@@ -289,12 +289,18 @@ export default function DashboardScreen() {
     ? "Pindai QR untuk Absen Pulang"
     : "Pindai QR untuk Absen Masuk";
   const ctaStyle = isLate ? styles.ctaLate : styles.ctaPrimary;
+  const offDayLabel = today_status.label?.trim();
+  const dayContextMessage = day_context.message?.trim();
   const blockedAttendanceTitle = day_context.is_on_leave
     ? "STATUS HARI INI: CUTI"
-    : "STATUS HARI INI: HARI LIBUR";
-  const blockedAttendanceMessage = day_context.is_on_leave
-    ? "Hari ini Anda sedang cuti yang sudah disetujui. Scan QR absensi dinonaktifkan."
-    : "Hari ini adalah hari libur. Scan QR absensi dinonaktifkan.";
+    : offDayLabel
+      ? `STATUS HARI INI: ${offDayLabel.toUpperCase()}`
+      : "STATUS HARI INI: HARI LIBUR";
+  const blockedAttendanceMessage = dayContextMessage
+    ? dayContextMessage
+    : day_context.is_on_leave
+      ? "Hari ini Anda sedang cuti yang sudah disetujui. Scan QR absensi dinonaktifkan."
+      : "Hari ini adalah hari libur. Scan QR absensi dinonaktifkan.";
   const statusPillText = isAttendanceBlockedDay
     ? day_context.is_on_leave
       ? "SEDANG CUTI"
@@ -309,12 +315,15 @@ export default function DashboardScreen() {
   const statusText = isAttendanceBlockedDay
     ? day_context.is_on_leave
       ? "CUTI DISETUJUI"
-      : "HARI LIBUR"
+      : (offDayLabel ?? "HARI LIBUR")
     : isCheckedIn
       ? "SUDAH ABSEN MASUK"
       : isCheckedOut
         ? "SUDAH CHECK-OUT"
         : "BELUM ABSEN";
+  const statusHeadingText = day_context.is_off_day
+    ? `HARI LIBUR: ${offDayLabel ?? "Hari Libur"}`
+    : `STATUS: ${statusText}`;
   const attendanceActionButton = (
     <View style={styles.ctaSection}>
       <Pressable
@@ -461,7 +470,7 @@ export default function DashboardScreen() {
               <View style={styles.rowInline}>
                 <View style={isLate ? styles.statusDotRed : styles.statusDotBlue} />
                 <Text style={isLate ? styles.statusDangerText : styles.statusPrimaryText}>
-                  STATUS: {statusText}
+                  {statusHeadingText}
                 </Text>
               </View>
               <View
