@@ -69,6 +69,12 @@ const EMPTY_ATTENDANCE_SUMMARY = {
   insight: undefined,
 } as const;
 
+const EMPTY_DAY_CONTEXT = {
+  is_off_day: false,
+  is_on_leave: false,
+  message: null,
+} as const;
+
 export default function DashboardScreen() {
   const insets = useSafeAreaInsets();
   const logout = useAuthStore((state) => state.logout);
@@ -230,22 +236,29 @@ export default function DashboardScreen() {
     state.data.attendance_summary && typeof state.data.attendance_summary === "object"
       ? state.data.attendance_summary
       : EMPTY_ATTENDANCE_SUMMARY;
+  const day_context =
+    state.data.day_context && typeof state.data.day_context === "object"
+      ? state.data.day_context
+      : EMPTY_DAY_CONTEXT;
   const recent_attendances = Array.isArray(state.data.recent_attendances)
     ? state.data.recent_attendances
     : [];
+  const isAttendanceBlockedDay = Boolean(day_context.is_off_day || day_context.is_on_leave);
 
   const hasCheckIn = Boolean(today_status.check_in_at);
   const hasCheckOut = Boolean(today_status.check_out_at);
 
-  const dashboardMode: DashboardMode = hasCheckIn && !hasCheckOut
-    ? "checked_in_not_checked_out"
-    : hasCheckIn && hasCheckOut
-      ? "checked_in_checked_out"
-      : threshold && now.getTime() > threshold.getTime()
-        ? "not_checked_in_late"
-        : "not_checked_in_on_time";
+  const dashboardMode: DashboardMode = isAttendanceBlockedDay
+    ? "not_checked_in_on_time"
+    : hasCheckIn && !hasCheckOut
+      ? "checked_in_not_checked_out"
+      : hasCheckIn && hasCheckOut
+        ? "checked_in_checked_out"
+        : threshold && now.getTime() > threshold.getTime()
+          ? "not_checked_in_late"
+          : "not_checked_in_on_time";
 
-  const isLate = dashboardMode === "not_checked_in_late";
+  const isLate = !isAttendanceBlockedDay && dashboardMode === "not_checked_in_late";
   const isCheckedIn = dashboardMode === "checked_in_not_checked_out";
   const isCheckedOut = dashboardMode === "checked_in_checked_out";
   const hasCheckedInToday = isCheckedIn || isCheckedOut;
@@ -262,6 +275,10 @@ export default function DashboardScreen() {
   const secondIconColor = secondCardAccent === "green" ? "#027A30" : "#6B7280";
   const attendanceAction = isCheckedIn ? "check_out" : "check_in";
   const handleOpenScanner = () => {
+    if (isAttendanceBlockedDay) {
+      return;
+    }
+
     router.push({
       pathname: "/attendance-scan",
       params: { mode: attendanceAction },
@@ -272,18 +289,65 @@ export default function DashboardScreen() {
     ? "Pindai QR untuk Absen Pulang"
     : "Pindai QR untuk Absen Masuk";
   const ctaStyle = isLate ? styles.ctaLate : styles.ctaPrimary;
-  const statusPillText = isCheckedIn
-    ? "SUDAH ABSEN"
-    : isCheckedOut
-      ? "SUDAH CHECK-OUT"
-    : isLate
-      ? "TERLAMBAT"
-      : "TEPAT WAKTU";
-  const statusText = isCheckedIn
-    ? "SUDAH ABSEN MASUK"
-    : isCheckedOut
-      ? "SUDAH CHECK-OUT"
-      : "BELUM ABSEN";
+  const blockedAttendanceTitle = day_context.is_on_leave
+    ? "STATUS HARI INI: CUTI"
+    : "STATUS HARI INI: HARI LIBUR";
+  const blockedAttendanceMessage = day_context.is_on_leave
+    ? "Hari ini Anda sedang cuti yang sudah disetujui. Scan QR absensi dinonaktifkan."
+    : "Hari ini adalah hari libur. Scan QR absensi dinonaktifkan.";
+  const statusPillText = isAttendanceBlockedDay
+    ? day_context.is_on_leave
+      ? "SEDANG CUTI"
+      : "HARI LIBUR"
+    : isCheckedIn
+      ? "SUDAH ABSEN"
+      : isCheckedOut
+        ? "SUDAH CHECK-OUT"
+        : isLate
+          ? "TERLAMBAT"
+          : "TEPAT WAKTU";
+  const statusText = isAttendanceBlockedDay
+    ? day_context.is_on_leave
+      ? "CUTI DISETUJUI"
+      : "HARI LIBUR"
+    : isCheckedIn
+      ? "SUDAH ABSEN MASUK"
+      : isCheckedOut
+        ? "SUDAH CHECK-OUT"
+        : "BELUM ABSEN";
+  const attendanceActionButton = (
+    <View style={styles.ctaSection}>
+      <Pressable
+        style={[
+          styles.ctaButton,
+          ctaStyle,
+          isAttendanceBlockedDay && styles.ctaDisabled,
+        ]}
+        onPress={handleOpenScanner}
+        disabled={isAttendanceBlockedDay}
+      >
+        <MaterialCommunityIcons
+          name="qrcode-scan"
+          size={28}
+          color={isAttendanceBlockedDay ? "#E5E7EB" : "#FFFFFF"}
+        />
+        <Text style={[styles.ctaText, isAttendanceBlockedDay && styles.ctaTextDisabled]}>
+          {ctaLabel}
+        </Text>
+      </Pressable>
+      {isAttendanceBlockedDay ? (
+        <View style={styles.ctaBlockedCard}>
+          <View style={styles.ctaBlockedIconWrap}>
+            <Ionicons name="information-circle" size={18} color="#9A3412" />
+          </View>
+          <View style={styles.ctaBlockedTextWrap}>
+            <Text style={styles.ctaBlockedTitle}>{blockedAttendanceTitle}</Text>
+            <Text style={styles.ctaBlockedMessage}>{blockedAttendanceMessage}</Text>
+          </View>
+        </View>
+      ) : null}
+    </View>
+  );
   const summaryRecentActivity = attendance_summary.recent_activity?.length
     ? attendance_summary.recent_activity.slice(0, 2).map((activity) => ({
         label: activity.label ?? "-",
@@ -388,14 +452,24 @@ export default function DashboardScreen() {
           </View>
         ) : (
           <View style={styles.mainCard}>
-            <View style={styles.statusCardHeader}>
+            <View
+              style={[
+                styles.statusCardHeader,
+                isAttendanceBlockedDay && styles.statusCardHeaderStacked,
+              ]}
+            >
               <View style={styles.rowInline}>
                 <View style={isLate ? styles.statusDotRed : styles.statusDotBlue} />
                 <Text style={isLate ? styles.statusDangerText : styles.statusPrimaryText}>
                   STATUS: {statusText}
                 </Text>
               </View>
-              <View style={isLate ? styles.badgeLate : styles.badgeOnTime}>
+              <View
+                style={[
+                  isLate ? styles.badgeLate : styles.badgeOnTime,
+                  isAttendanceBlockedDay && styles.badgeStacked,
+                ]}
+              >
                 <Text style={isLate ? styles.badgeLateText : styles.badgeOnTimeText}>
                   {statusPillText}
                 </Text>
@@ -453,24 +527,12 @@ export default function DashboardScreen() {
               />
             </View>
             {isCheckedIn ? (
-              <Pressable
-                style={[styles.ctaButton, ctaStyle]}
-                onPress={handleOpenScanner}
-              >
-                <MaterialCommunityIcons name="qrcode-scan" size={28} color="#FFFFFF" />
-                <Text style={styles.ctaText}>{ctaLabel}</Text>
-              </Pressable>
+              attendanceActionButton
             ) : null}
           </>
         ) : (
           <>
-            <Pressable
-              style={[styles.ctaButton, ctaStyle]}
-              onPress={handleOpenScanner}
-            >
-              <MaterialCommunityIcons name="qrcode-scan" size={28} color="#FFFFFF" />
-              <Text style={styles.ctaText}>{ctaLabel}</Text>
-            </Pressable>
+            {attendanceActionButton}
             <View style={styles.duoCardsRow}>
               <StatusInfoCard
                 icon={
@@ -1159,6 +1221,14 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
+  statusCardHeaderStacked: {
+    flexDirection: "column",
+    alignItems: "flex-start",
+    gap: spacing.s8,
+  },
+  badgeStacked: {
+    alignSelf: "flex-start",
+  },
   badgeOnTime: {
     borderRadius: 999,
     backgroundColor: "#CAD7F3",
@@ -1297,6 +1367,9 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 5 },
     elevation: 4,
   },
+  ctaSection: {
+    gap: spacing.s8,
+  },
   ctaPrimary: {
     backgroundColor: "#1868D5",
   },
@@ -1304,12 +1377,52 @@ const styles = StyleSheet.create({
     backgroundColor: "#F39200",
     shadowColor: "#F39200",
   },
+  ctaDisabled: {
+    backgroundColor: "#9CA3AF",
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
+  },
   ctaText: {
     color: "#FFFFFF",
     ...typography.titleCard,
     fontSize: 17,
     lineHeight: 22,
     fontWeight: "800",
+  },
+  ctaTextDisabled: {
+    color: "#F3F4F6",
+  },
+  ctaBlockedCard: {
+    borderRadius: 14,
+    backgroundColor: "#FFF1E6",
+    borderWidth: 1,
+    borderColor: "#FED7AA",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing.s8,
+  },
+  ctaBlockedIconWrap: {
+    marginTop: 2,
+  },
+  ctaBlockedTextWrap: {
+    flex: 1,
+    gap: spacing.s4,
+  },
+  ctaBlockedTitle: {
+    ...typography.labelCaps,
+    color: "#9A3412",
+    fontSize: 11,
+    fontWeight: "800",
+  },
+  ctaBlockedMessage: {
+    ...typography.body,
+    color: "#7C2D12",
+    fontSize: 13,
+    lineHeight: 19,
+    fontWeight: "600",
   },
   duoCardsRow: {
     flexDirection: "row",
