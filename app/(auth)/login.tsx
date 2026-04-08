@@ -74,18 +74,16 @@ export default function LoginScreen() {
       >
         <View style={styles.formCard}>
           <View style={styles.cardBrandSection}>
-            <View style={styles.cardLogoWrap}>
-              <Image
-                source={require("../../assets/FlowHR_logo.png")}
-                style={styles.cardLogo}
-                resizeMode="contain"
-              />
-            </View>
-            <Text style={styles.heroTitle}>Sign In</Text>
+            <Image
+              source={require("../../assets/FlowHR_logo.png")}
+              style={styles.cardLogo}
+              resizeMode="contain"
+            />
+            <Text style={styles.heroTitle}>Login</Text>
           </View>
 
           <Text style={styles.description}>
-            Gunakan akun yag disediakan perusahaan Anda untuk melanjutkan.
+            Gunakan akun yang disediakan perusahaan Anda untuk melanjutkan.
           </Text>
 
           <View style={styles.fieldGroup}>
@@ -134,7 +132,9 @@ export default function LoginScreen() {
             </View>
           </View>
 
-          {errorMessage ? <Text style={styles.error}>{errorMessage}</Text> : null}
+          {errorMessage ? (
+            <Text style={styles.error}>{errorMessage}</Text>
+          ) : null}
 
           <Pressable
             disabled={!canSubmit}
@@ -154,7 +154,6 @@ export default function LoginScreen() {
             )}
           </Pressable>
         </View>
-
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -200,31 +199,22 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#E5E7EB",
   },
-  cardLogoWrap: {
-    borderRadius: 14,
-    overflow: "hidden",
-    backgroundColor: "#F8FAFC",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    paddingHorizontal: spacing.s8,
-    paddingVertical: spacing.s6,
-  },
   cardLogo: {
-    width: 156,
-    height: 52,
+    width: 156 * 2,
+    height: 52 * 2,
   },
   heading: {
     ...typography.titlePage,
     color: "#0F172A",
     marginTop: spacing.s4,
-    textAlign: "center"
+    textAlign: "center",
   },
   description: {
     ...typography.body,
     color: "#6B7280",
     marginTop: -4,
     marginBottom: spacing.s4,
-    textAlign:"center"
+    textAlign: "center",
   },
   fieldGroup: {
     gap: spacing.s6,
