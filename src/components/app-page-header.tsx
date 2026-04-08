@@ -3,6 +3,7 @@ import { Image, StyleSheet, Text, View } from "react-native";
 import { spacing, typography } from "../theme/typography";
 
 const FLOWHR_LOGO = require("../../assets/FlowHR_logo.png");
+const FLOWHR_LOGO_TRANSPARENT = require("../../assets/FlowHR_logo Transapran.png");
 
 type HeaderTone = "default" | "inverse";
 type HeaderSurface = "light" | "dark" | "none";
@@ -25,6 +26,7 @@ export function AppPageHeader({
   rightAccessory,
 }: AppPageHeaderProps) {
   const isInverse = tone === "inverse";
+  const logoSource = surface === "light" ? FLOWHR_LOGO_TRANSPARENT : FLOWHR_LOGO;
 
   return (
     <View style={[styles.wrapper, { paddingTop: topInset + spacing.s6 }]}>
@@ -43,7 +45,7 @@ export function AppPageHeader({
 
         <View style={styles.center}>
           <View style={styles.logoWrap}>
-            <Image source={FLOWHR_LOGO} style={styles.logoImage} resizeMode="contain" />
+            <Image source={logoSource} style={styles.logoImage} resizeMode="contain" />
           </View>
 
           <View style={styles.titleWrap}>

@@ -17,6 +17,8 @@ import { normalizeApiError } from "../../src/lib/api";
 import { useAuthStore } from "../../src/store/auth-store";
 import { spacing, typography } from "../../src/theme/typography";
 
+const FLOWHR_LOGO_TRANSPARENT = require("../../assets/FlowHR_logo Transapran.png");
+
 export default function LoginScreen() {
   const login = useAuthStore((state) => state.login);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -74,17 +76,12 @@ export default function LoginScreen() {
       >
         <View style={styles.formCard}>
           <View style={styles.cardBrandSection}>
-            <Image
-              source={require("../../assets/FlowHR_logo.png")}
-              style={styles.cardLogo}
-              resizeMode="contain"
-            />
-            <Text style={styles.heroTitle}>Login</Text>
+              <Image
+                source={FLOWHR_LOGO_TRANSPARENT}
+                style={styles.cardLogo}
+                resizeMode="contain"
+              />
           </View>
-
-          <Text style={styles.description}>
-            Gunakan akun yang disediakan perusahaan Anda untuk melanjutkan.
-          </Text>
 
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Email</Text>
@@ -200,8 +197,8 @@ const styles = StyleSheet.create({
     borderBottomColor: "#E5E7EB",
   },
   cardLogo: {
-    width: 156 * 2,
-    height: 52 * 2,
+    width: 172*2,
+    height: 58*2,
   },
   heading: {
     ...typography.titlePage,
