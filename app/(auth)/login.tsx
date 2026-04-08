@@ -1,20 +1,21 @@
-﻿import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Feather } from "@expo/vector-icons";
 import { Redirect, router } from "expo-router";
 import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
   StyleSheet,
-  Switch,
   Text,
   TextInput,
   View,
 } from "react-native";
 import { normalizeApiError } from "../../src/lib/api";
 import { useAuthStore } from "../../src/store/auth-store";
+import { spacing, typography } from "../../src/theme/typography";
 
 export default function LoginScreen() {
   const login = useAuthStore((state) => state.login);
@@ -24,7 +25,6 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPasswordHidden, setIsPasswordHidden] = useState(true);
-  const [keepSignedIn, setKeepSignedIn] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const canSubmit = useMemo(
@@ -61,38 +61,43 @@ export default function LoginScreen() {
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 24 : 0}
       style={styles.page}
     >
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        automaticallyAdjustKeyboardInsets
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.brandSection}>
-          <View style={styles.brandRow}>
-            <MaterialCommunityIcons name="cube-outline" size={22} color="#1869D5" />
-            <Text style={styles.brandName}>FlowHR</Text>
+        <View style={styles.formCard}>
+          <View style={styles.cardBrandSection}>
+            <View style={styles.cardLogoWrap}>
+              <Image
+                source={require("../../assets/FlowHR_logo.png")}
+                style={styles.cardLogo}
+                resizeMode="contain"
+              />
+            </View>
+            <Text style={styles.heroTitle}>Sign In</Text>
           </View>
-          <Text style={styles.brandSubtitle}>Selamat datang kembali di ruang kerja Anda</Text>
-        </View>
 
-        <View style={styles.formSection}>
-          <Text style={styles.heading}>Masuk</Text>
           <Text style={styles.description}>
-            Masukkan kredensial Anda untuk mengakses dashboard.
+            Gunakan akun yag disediakan perusahaan Anda untuk melanjutkan.
           </Text>
 
           <View style={styles.fieldGroup}>
-            <Text style={styles.label}>EMAIL ATAU USERNAME</Text>
+            <Text style={styles.label}>Email atau Username</Text>
             <View style={styles.inputContainer}>
-              <Feather name="at-sign" size={20} color="#9198A2" />
+              <Feather name="at-sign" size={18} color="#6B7280" />
               <TextInput
                 autoCapitalize="none"
                 autoComplete="email"
                 keyboardType="email-address"
                 placeholder="nama@perusahaan.com"
-                placeholderTextColor="#A5ABB3"
+                placeholderTextColor="#9CA3AF"
                 style={styles.input}
                 value={email}
                 onChangeText={setEmail}
@@ -101,19 +106,14 @@ export default function LoginScreen() {
           </View>
 
           <View style={styles.fieldGroup}>
-            <View style={styles.passwordHeader}>
-              <Text style={styles.label}>KATA SANDI</Text>
-              <Pressable>
-                <Text style={styles.forgotPassword}>Lupa Kata Sandi?</Text>
-              </Pressable>
-            </View>
+            <Text style={styles.label}>Kata Sandi</Text>
             <View style={styles.inputContainer}>
-              <Feather name="lock" size={20} color="#9198A2" />
+              <Feather name="lock" size={18} color="#6B7280" />
               <TextInput
                 autoCapitalize="none"
                 autoComplete="password"
-                placeholder="************"
-                placeholderTextColor="#A5ABB3"
+                placeholder="Masukkan kata sandi"
+                placeholderTextColor="#9CA3AF"
                 secureTextEntry={isPasswordHidden}
                 style={styles.input}
                 value={password}
@@ -122,25 +122,16 @@ export default function LoginScreen() {
               <Pressable
                 onPress={() => setIsPasswordHidden((current) => !current)}
                 hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="Toggle password visibility"
               >
                 <Feather
                   name={isPasswordHidden ? "eye" : "eye-off"}
-                  size={20}
-                  color="#565D67"
+                  size={18}
+                  color="#4B5563"
                 />
               </Pressable>
             </View>
-          </View>
-
-          <View style={styles.keepSignedRow}>
-            <Switch
-              value={keepSignedIn}
-              onValueChange={setKeepSignedIn}
-              trackColor={{ false: "#D4D7DB", true: "#9BC1F0" }}
-              thumbColor={keepSignedIn ? "#1869D5" : "#F8FAFC"}
-              ios_backgroundColor="#D4D7DB"
-            />
-            <Text style={styles.keepSignedText}>Biarkan saya tetap masuk</Text>
           </View>
 
           {errorMessage ? <Text style={styles.error}>{errorMessage}</Text> : null}
@@ -158,26 +149,12 @@ export default function LoginScreen() {
             ) : (
               <View style={styles.buttonContent}>
                 <Text style={styles.buttonText}>Masuk</Text>
-                <Feather name="arrow-right" size={20} color="#FFFFFF" />
+                <Feather name="arrow-right" size={18} color="#FFFFFF" />
               </View>
             )}
           </Pressable>
         </View>
 
-        <View style={styles.footerSection}>
-          <Text style={styles.footerText}>Belum punya akun?</Text>
-          <Pressable>
-            <Text style={styles.footerLink}>Hubungi Administrator HR</Text>
-          </Pressable>
-        </View>
-
-        <View style={styles.dotsContainer}>
-          <View style={[styles.dot, styles.dotActive]} />
-          <View style={styles.dot} />
-          <View style={styles.dot} />
-        </View>
-
-        <Text style={styles.versionText}>FLOWHR VERSI 2.4.0 • SIAP PERUSAHAAN</Text>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -186,170 +163,125 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   page: {
     flex: 1,
-    backgroundColor: "#EEF0F3",
+    backgroundColor: "#F3F4F6",
   },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: 22,
-    paddingTop: 52,
-    paddingBottom: 26,
-    justifyContent: "space-between",
+    paddingHorizontal: spacing.s20,
+    paddingTop: spacing.s20,
+    paddingBottom: spacing.s20,
+    justifyContent: "center",
+    gap: spacing.s16,
   },
-  brandSection: {
+  heroTitle: {
+    ...typography.titlePage,
+    color: "#111827",
+    textAlign: "center",
+  },
+  formCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    paddingHorizontal: spacing.s16,
+    paddingVertical: spacing.s20,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    gap: spacing.s16,
+    shadowColor: "#111827",
+    shadowOpacity: 0.08,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 3,
+  },
+  cardBrandSection: {
     alignItems: "center",
-    gap: 6,
-    marginBottom: 32,
+    gap: spacing.s8,
+    paddingBottom: spacing.s8,
+    marginBottom: spacing.s4,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
   },
-  brandRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+  cardLogoWrap: {
+    borderRadius: 14,
+    overflow: "hidden",
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    paddingHorizontal: spacing.s8,
+    paddingVertical: spacing.s6,
   },
-  brandName: {
-    fontSize: 34,
-    fontWeight: "800",
-    color: "#101317",
-    letterSpacing: -0.4,
-  },
-  brandSubtitle: {
-    color: "#535B67",
-    fontSize: 15,
-    fontWeight: "600",
-  },
-  formSection: {
-    gap: 16,
+  cardLogo: {
+    width: 156,
+    height: 52,
   },
   heading: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: "#191D23",
-    letterSpacing: -0.5,
+    ...typography.titlePage,
+    color: "#0F172A",
+    marginTop: spacing.s4,
+    textAlign: "center"
   },
   description: {
-    fontSize: 15,
-    color: "#59606B",
-    marginTop: -2,
-    marginBottom: 10,
+    ...typography.body,
+    color: "#6B7280",
+    marginTop: -4,
+    marginBottom: spacing.s4,
+    textAlign:"center"
   },
   fieldGroup: {
-    gap: 9,
+    gap: spacing.s6,
   },
   label: {
-    fontSize: 12,
-    color: "#4D535E",
-    letterSpacing: 0.7,
-    fontWeight: "700",
-  },
-  passwordHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  forgotPassword: {
-    fontSize: 14,
-    color: "#1967D2",
-    fontWeight: "700",
+    ...typography.labelCaps,
+    color: "#4B5563",
   },
   inputContainer: {
-    borderRadius: 10,
-    backgroundColor: "#DFE1E4",
-    minHeight: 54,
-    paddingHorizontal: 14,
+    minHeight: 52,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#D1D5DB",
+    backgroundColor: "#F9FAFB",
+    paddingHorizontal: spacing.s12,
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: spacing.s8,
   },
   input: {
     flex: 1,
-    fontSize: 17,
-    color: "#2A2E35",
+    ...typography.body,
+    color: "#111827",
     paddingVertical: 10,
-    fontWeight: "500",
   },
-  keepSignedRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 3,
-    marginBottom: 2,
-    gap: 9,
-  },
-  keepSignedText: {
-    fontSize: 14,
-    color: "#555D68",
-    fontWeight: "600",
+  error: {
+    ...typography.caption,
+    color: "#B91C1C",
+    marginTop: 2,
+    marginBottom: -2,
   },
   button: {
-    marginTop: 6,
-    borderRadius: 26,
-    backgroundColor: "#1A67CD",
-    minHeight: 52,
-    paddingHorizontal: 22,
+    marginTop: spacing.s8,
+    minHeight: 50,
+    borderRadius: 14,
+    backgroundColor: "#0A63C9",
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#1A67CD",
-    shadowOpacity: 0.23,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 3,
+  },
+  buttonDisabled: {
+    opacity: 0.65,
   },
   buttonContent: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
+    gap: spacing.s8,
   },
   buttonText: {
+    ...typography.body,
     color: "#FFFFFF",
     fontWeight: "700",
-    fontSize: 16,
-    letterSpacing: 0.2,
-  },
-  error: {
-    color: "#B91C1C",
-    fontSize: 13,
-    marginBottom: -3,
-  },
-  footerSection: {
-    alignItems: "center",
-    marginTop: 72,
-    gap: 8,
-  },
-  footerText: {
-    color: "#5E6570",
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  footerLink: {
-    color: "#3A404A",
-    fontSize: 15,
-    fontWeight: "800",
-  },
-  dotsContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: 12,
-    marginTop: 18,
-  },
-  dot: {
-    width: 7,
-    height: 7,
-    borderRadius: 999,
-    backgroundColor: "#BDD4F4",
-  },
-  dotActive: {
-    backgroundColor: "#96BDEB",
   },
   versionText: {
-    marginTop: 20,
+    ...typography.caption,
     textAlign: "center",
-    color: "#A3AAB4",
-    fontSize: 10,
-    letterSpacing: 2,
-    fontWeight: "700",
+    color: "#9CA3AF",
+    letterSpacing: 0.6,
+    marginTop: spacing.s12,
   },
 });
-
-
