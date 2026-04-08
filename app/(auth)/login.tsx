@@ -89,7 +89,7 @@ export default function LoginScreen() {
           </Text>
 
           <View style={styles.fieldGroup}>
-            <Text style={styles.label}>Email atau Username</Text>
+            <Text style={styles.label}>Email</Text>
             <View style={styles.inputContainer}>
               <Feather name="at-sign" size={18} color="#6B7280" />
               <TextInput
