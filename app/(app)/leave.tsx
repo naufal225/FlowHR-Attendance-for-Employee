@@ -37,6 +37,13 @@ type LeaveCalendarEntry = {
   reason: string | null;
 };
 
+type HolidayCalendarEntry = {
+  id: number;
+  name: string | null;
+  dateStart: string;
+  dateEnd: string;
+};
+
 type CalendarCell = {
   key: string;
   day: number;
@@ -44,6 +51,7 @@ type CalendarCell = {
   isToday: boolean;
   isSelected: boolean;
   hasLeave: boolean;
+  hasHoliday: boolean;
 };
 
 const WEEKDAY_LABELS = ["S", "S", "R", "K", "J", "S", "M"];
@@ -119,6 +127,8 @@ export default function LeaveScreen() {
   );
 
   const leaveByDate = useMemo(() => buildLeaveDateMap(leaveEntries), [leaveEntries]);
+  const holidayEntries = useMemo(() => collectHolidayEntries(state.data), [state.data]);
+  const holidayByDate = useMemo(() => buildHolidayDateMap(holidayEntries), [holidayEntries]);
 
   const todayKey = state.data?.today_context.date ?? toDateKey(new Date());
   const calendarCells = useMemo(
@@ -128,8 +138,9 @@ export default function LeaveScreen() {
         selectedDateKey,
         todayKey,
         leaveByDate,
+        holidayByDate,
       }),
-    [displayMonth, leaveByDate, selectedDateKey, todayKey],
+    [displayMonth, holidayByDate, leaveByDate, selectedDateKey, todayKey],
   );
   const calendarRows = useMemo(() => {
     const rows: CalendarCell[][] = [];
@@ -140,6 +151,7 @@ export default function LeaveScreen() {
   }, [calendarCells]);
 
   const selectedLeave = selectedDateKey ? (leaveByDate.get(selectedDateKey) ?? null) : null;
+  const selectedHoliday = selectedDateKey ? (holidayByDate.get(selectedDateKey) ?? null) : null;
 
   if (state.isLoading && !state.data) {
     return (
@@ -247,12 +259,22 @@ export default function LeaveScreen() {
   }
 
   const isOnLeaveToday = state.data.today_context.attendance_status === "on_leave";
+  const isHolidayToday = Boolean(state.data.today_context.is_holiday);
+  const holidayName = state.data.today_context.holiday_name?.trim() || "Hari Libur";
+  const isTodayLeaveLike = isOnLeaveToday || isHolidayToday;
+  const statusLabel = isHolidayToday && !isOnLeaveToday
+    ? "Status Hari Ini Cuti"
+    : "Status Hari Ini";
   const statusTitle = isOnLeaveToday
     ? (state.data.today_context.attendance_status_label ?? "Sedang Cuti")
-    : "Masuk Kerja";
+    : isHolidayToday
+      ? `(${holidayName})`
+      : "Status hari ini masuk kerja";
   const statusNote = isOnLeaveToday
     ? (state.data.today_context.attendance_note ?? "Anda tidak perlu check-in hari ini.")
-    : "Selamat bekerja, jangan lupa check-in hari ini.";
+    : isHolidayToday
+      ? "Selamat menikmati cuti"
+      : "Selamat bekerja, jangan lupa check-in hari ini.";
 
   return (
     <View style={styles.screen}>
@@ -271,22 +293,22 @@ export default function LeaveScreen() {
       >
         <AppPageHeader title="Cuti" topInset={0} />
 
-        <View style={isOnLeaveToday ? styles.todayCardLeave : styles.todayCardWorking}>
-          <View style={isOnLeaveToday ? styles.todayIconWrapLeave : styles.todayIconWrapWorking}>
-            {isOnLeaveToday ? (
+        <View style={isTodayLeaveLike ? styles.todayCardLeave : styles.todayCardWorking}>
+          <View style={isTodayLeaveLike ? styles.todayIconWrapLeave : styles.todayIconWrapWorking}>
+            {isTodayLeaveLike ? (
               <Ionicons name="calendar-outline" size={30} color="#FFFFFF" />
             ) : (
               <Ionicons name="briefcase" size={20} color="#0D7F3D" />
             )}
           </View>
           <View style={styles.todayTextWrap}>
-            <Text style={isOnLeaveToday ? styles.todayLabelLeave : styles.todayLabelWorking}>
-              Status Hari Ini
+            <Text style={isTodayLeaveLike ? styles.todayLabelLeave : styles.todayLabelWorking}>
+              {statusLabel}
             </Text>
-            <Text style={isOnLeaveToday ? styles.todayValueLeave : styles.todayValueWorking}>
+            <Text style={isTodayLeaveLike ? styles.todayValueLeave : styles.todayValueWorking}>
               {statusTitle}
             </Text>
-            <Text style={isOnLeaveToday ? styles.todayNoteLeave : styles.todayNoteWorking}>
+            <Text style={isTodayLeaveLike ? styles.todayNoteLeave : styles.todayNoteWorking}>
               {statusNote}
             </Text>
           </View>
@@ -358,7 +380,11 @@ export default function LeaveScreen() {
                       </Text>
                     </View>
                     <View style={styles.dotSlot}>
-                      {cell.hasLeave ? <View style={styles.leaveDot} /> : null}
+                      {cell.hasHoliday ? (
+                        <View style={styles.holidayDot} />
+                      ) : cell.hasLeave ? (
+                        <View style={styles.leaveDot} />
+                      ) : null}
                     </View>
                   </Pressable>
                 ))}
@@ -385,6 +411,28 @@ export default function LeaveScreen() {
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Alasan</Text>
               <Text style={styles.detailReason}>{selectedLeave.reason ?? "-"}</Text>
+            </View>
+          </View>
+        ) : null}
+
+        {selectedDateKey && selectedHoliday ? (
+          <View style={styles.detailCard}>
+            <Text style={styles.detailTitle}>Detail Hari Libur</Text>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Tanggal Dipilih</Text>
+              <Text style={styles.detailValue}>{formatDateFromKey(selectedDateKey)}</Text>
+            </View>
+            <View style={styles.detailDivider} />
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Periode Libur</Text>
+              <Text style={styles.detailValue}>
+                {formatDateKey(selectedHoliday.dateStart)} - {formatDateKey(selectedHoliday.dateEnd)}
+              </Text>
+            </View>
+            <View style={styles.detailDivider} />
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Nama Libur</Text>
+              <Text style={styles.detailReason}>{selectedHoliday.name ?? "Hari Libur"}</Text>
             </View>
           </View>
         ) : null}
@@ -468,16 +516,87 @@ function buildLeaveDateMap(entries: LeaveCalendarEntry[]): Map<string, LeaveCale
   return map;
 }
 
+function collectHolidayEntries(data: MobileLeavePagePayload | null): HolidayCalendarEntry[] {
+  if (!data) {
+    return [];
+  }
+
+  const entries: HolidayCalendarEntry[] = [];
+  const seen = new Set<string>();
+  const holidayItems = Array.isArray(data.holidays) && data.holidays.length > 0
+    ? data.holidays
+    : (Array.isArray(data.holiday_dates)
+        ? data.holiday_dates.map((date, index) => ({
+            id: -(index + 1),
+            name: null,
+            start_from: date,
+            end_at: date,
+          }))
+        : []);
+
+  for (const item of holidayItems) {
+    if (!item.start_from || !item.end_at) {
+      continue;
+    }
+
+    const key = `${item.id}:${item.start_from}:${item.end_at}:${item.name ?? ""}`;
+    if (seen.has(key)) {
+      continue;
+    }
+
+    seen.add(key);
+    entries.push({
+      id: item.id,
+      name: item.name,
+      dateStart: item.start_from,
+      dateEnd: item.end_at,
+    });
+  }
+
+  return entries;
+}
+
+function buildHolidayDateMap(entries: HolidayCalendarEntry[]): Map<string, HolidayCalendarEntry> {
+  const map = new Map<string, HolidayCalendarEntry>();
+
+  for (const entry of entries) {
+    const startDate = parseDateOnly(entry.dateStart);
+    const endDate = parseDateOnly(entry.dateEnd);
+
+    if (!startDate || !endDate || startDate.getTime() > endDate.getTime()) {
+      continue;
+    }
+
+    let cursor = startOfDay(startDate);
+    const end = startOfDay(endDate);
+    let guard = 0;
+
+    while (cursor.getTime() <= end.getTime() && guard < 370) {
+      const key = toDateKey(cursor);
+      if (!map.has(key)) {
+        map.set(key, entry);
+      }
+
+      cursor = addDays(cursor, 1);
+      guard += 1;
+    }
+  }
+
+  return map;
+}
+
 function buildCalendarCells({
   month,
   selectedDateKey,
   todayKey,
   leaveByDate,
+  holidayByDate,
 }: {
   month: Date;
   selectedDateKey: string | null;
   todayKey: string;
   leaveByDate: Map<string, LeaveCalendarEntry>;
+  holidayByDate: Map<string, HolidayCalendarEntry>;
 }): CalendarCell[] {
   const monthStart = startOfMonth(month);
   const monthEnd = endOfMonth(month);
@@ -496,6 +615,7 @@ function buildCalendarCells({
       isToday: key === todayKey,
       isSelected: key === selectedDateKey,
       hasLeave: leaveByDate.has(key),
+      hasHoliday: holidayByDate.has(key),
     });
 
     cursor = addDays(cursor, 1);
@@ -935,11 +1055,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginTop: 2,
   },
-  leaveDot: {
+  holidayDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
     backgroundColor: "#C01B1B",
+  },
+  leaveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#1D64D7",
   },
   detailCard: {
     borderRadius: 18,

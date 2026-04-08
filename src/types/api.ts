@@ -263,6 +263,8 @@ export type MobileLeavePagePayload = {
     attendance_status_label: string | null;
     attendance_note: string | null;
     is_working_day: boolean;
+    is_holiday: boolean;
+    holiday_name: string | null;
     leave: MobileLeavePageLeaveItem | null;
     attendance: {
       id: number;
@@ -278,6 +280,13 @@ export type MobileLeavePagePayload = {
     active_leave_count: number;
     upcoming_leave_count: number;
   };
+  holiday_dates: string[];
+  holidays: Array<{
+    id: number;
+    name: string | null;
+    start_from: string;
+    end_at: string;
+  }>;
   active_or_upcoming_leaves: MobileLeavePageActiveOrUpcomingItem[];
   history: {
     items: MobileLeavePageHistoryItem[];
