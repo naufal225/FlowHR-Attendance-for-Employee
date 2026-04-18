@@ -32,10 +32,10 @@ type TimeoutError = {
 
 function isTimeoutError(error: unknown): error is TimeoutError {
   return (
-    typeof error === "object"
-    && error !== null
-    && "code" in error
-    && (error as { code?: string }).code === LOCATION_TIMEOUT_ERROR
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code?: string }).code === LOCATION_TIMEOUT_ERROR
   );
 }
 
@@ -44,10 +44,16 @@ function isPermissionError(error: unknown): boolean {
     return false;
   }
 
-  const maybeCode = String((error as { code?: unknown }).code ?? "").toLowerCase();
-  const maybeMessage = String((error as { message?: unknown }).message ?? "").toLowerCase();
+  const maybeCode = String(
+    (error as { code?: unknown }).code ?? "",
+  ).toLowerCase();
+  const maybeMessage = String(
+    (error as { message?: unknown }).message ?? "",
+  ).toLowerCase();
 
-  return maybeCode.includes("permission") || maybeMessage.includes("permission");
+  return (
+    maybeCode.includes("permission") || maybeMessage.includes("permission")
+  );
 }
 
 function normalizeErrorCode(error: unknown): string {
@@ -70,7 +76,11 @@ function mapExpoLocationError(error: unknown): AttendanceLocationError {
   const code = normalizeErrorCode(error);
   const message = normalizeErrorMessage(error);
 
-  if (isTimeoutError(error) || code === "E_LOCATION_TIMEOUT" || message.includes("timeout")) {
+  if (
+    isTimeoutError(error) ||
+    code === "E_LOCATION_TIMEOUT" ||
+    message.includes("timeout")
+  ) {
     return {
       code: "LOCATION_TIMEOUT",
       message:
@@ -79,11 +89,11 @@ function mapExpoLocationError(error: unknown): AttendanceLocationError {
   }
 
   if (
-    code === "E_LOCATION_SERVICES_DISABLED"
-    || code === "E_LOCATION_SETTINGS_UNSATISFIED"
-    || message.includes("services are disabled")
-    || message.includes("settings unsatisfied")
-    || message.includes("provider")
+    code === "E_LOCATION_SERVICES_DISABLED" ||
+    code === "E_LOCATION_SETTINGS_UNSATISFIED" ||
+    message.includes("services are disabled") ||
+    message.includes("settings unsatisfied") ||
+    message.includes("provider")
   ) {
     return {
       code: "GPS_DISABLED",
@@ -93,9 +103,9 @@ function mapExpoLocationError(error: unknown): AttendanceLocationError {
   }
 
   if (
-    isPermissionError(error)
-    || code === "E_LOCATION_UNAUTHORIZED"
-    || code === "E_NO_PERMISSIONS"
+    isPermissionError(error) ||
+    code === "E_LOCATION_UNAUTHORIZED" ||
+    code === "E_NO_PERMISSIONS"
   ) {
     return {
       code: "GPS_DISABLED",
@@ -154,11 +164,7 @@ export async function getHighAccuracyLocation(): Promise<AttendanceLocationResul
 
   // Android kadang belum menyalakan network provider walau permission sudah granted.
   if (Platform.OS === "android") {
-    try {
-      await Location.enableNetworkProviderAsync();
-    } catch {
-      // User bisa menolak prompt ini; fallback akan tetap berjalan.
-    }
+    await Location.enableNetworkProviderAsync();
   }
 
   try {
@@ -182,8 +188,8 @@ export async function getHighAccuracyLocation(): Promise<AttendanceLocationResul
     const mappedError = mapExpoLocationError(error);
 
     if (
-      mappedError.code === "LOCATION_TIMEOUT"
-      || mappedError.code === "LOCATION_UNAVAILABLE"
+      mappedError.code === "LOCATION_TIMEOUT" ||
+      mappedError.code === "LOCATION_UNAVAILABLE"
     ) {
       try {
         const secondaryPosition = await withTimeout(
@@ -222,10 +228,11 @@ export async function getHighAccuracyLocation(): Promise<AttendanceLocationResul
         };
       }
 
-      const fallbackLastKnownPosition = await Location.getLastKnownPositionAsync({
-        maxAge: LAST_KNOWN_MAX_AGE_EXTENDED_MS,
-        requiredAccuracy: LAST_KNOWN_REQUIRED_ACCURACY_EXTENDED_M,
-      });
+      const fallbackLastKnownPosition =
+        await Location.getLastKnownPositionAsync({
+          maxAge: LAST_KNOWN_MAX_AGE_EXTENDED_MS,
+          requiredAccuracy: LAST_KNOWN_REQUIRED_ACCURACY_EXTENDED_M,
+        });
 
       if (fallbackLastKnownPosition) {
         return {
